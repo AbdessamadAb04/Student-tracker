@@ -1,55 +1,35 @@
 import { useNavigate } from 'react-router-dom'
-import { grades, absences, tasks, feedbacks, subjects, profile, mockGroups, mockGroupStudents } from '../data/mockData'
-import { useProgress } from '../context/ProgressContext'
 import { useAuth } from '../context/AuthContext'
+import { useGrades } from '../hooks/useGrades'
+import { useAbsences } from '../hooks/useAbsences'
+import { useTasks } from '../hooks/useTasks'
+import { useSubjects } from '../hooks/useSubjects'
+import { useStudySessions } from '../hooks/useStudySessions'
+import { useProgress } from '../context/ProgressContext'
 import RadialProgress from '../components/shared/RadialProgress'
-
-function subjectAverage(subjectId: string) {
-  const sg = grades.filter(g => g.subjectId === subjectId)
-  if (!sg.length) return 0
-  const totalWeight = sg.reduce((s, g) => s + g.weight, 0)
-  const weighted = sg.reduce((s, g) => s + g.value * g.weight, 0)
-  return +(weighted / totalWeight).toFixed(2)
-}
-
-function generalAverage() {
-  let totalCoeff = 0, weightedSum = 0
-  subjects.forEach(s => {
-    const avg = subjectAverage(s.id)
-    const coeff = s.coefficient ?? 1
-    weightedSum += avg * coeff
-    totalCoeff += coeff
-  })
-  return totalCoeff ? +(weightedSum / totalCoeff).toFixed(2) : 0
-}
-
-// ─── Teacher Dashboard ────────────────────────────────────────────────────────
+import { feedbacks as mockFeedbacks, mockGroups, mockGroupStudents } from '../data/mockData'
 
 function TeacherDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const teacherName = user?.user_metadata?.name ?? user?.email ?? 'Enseignant'
+  const { grades } = useGrades()
+  const { tasks } = useTasks()
 
-  // Stats across all groups
   const totalStudents = mockGroupStudents.length
   const totalGroups = mockGroups.length
+  const assignedTasks = tasks.filter(t => t.status === 'submitted')
+  const pendingReview = assignedTasks.length
+  const totalGrades = grades.length
 
-  // Tasks assigned by teacher (createdBy teacher) across all groups
-  const assignedTasks = tasks.filter(t => (t as any).createdBy === 'teacher' || (t as any).created_by === 'teacher')
-  const pendingReview = assignedTasks.filter(t => (t.status as string) === 'submitted').length
-  const completedAssigned = assignedTasks.filter(t => (t.status as string) === 'completed' || (t.status as string) === 'graded').length
-
-  // Grade distribution from all grades
   const excellent = grades.filter(g => g.value >= 16).length
   const satisfactory = grades.filter(g => g.value >= 12 && g.value < 16).length
   const failing = grades.filter(g => g.value < 12).length
-  const totalGrades = grades.length
 
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-[var(--color-text)]">
           Bonjour, {teacherName.split(' ')[0]}
@@ -59,46 +39,30 @@ function TeacherDashboard() {
         </p>
       </div>
 
-      {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div className="rounded-2xl bg-[var(--color-primary)] p-5 text-white">
           <div className="text-[var(--text-xs)] font-medium opacity-75 uppercase tracking-wider">Groupes</div>
           <div className="mt-2 text-4xl font-bold">{totalGroups}</div>
           <div className="mt-1 text-[var(--text-xs)] opacity-60">classes actives</div>
         </div>
-
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5">
           <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Étudiants</div>
           <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{totalStudents}</div>
           <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">inscrits au total</div>
         </div>
-
-        <button
-          onClick={() => navigate('/taches')}
-          className={`rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${
-            pendingReview > 0 ? 'border-amber-200 bg-amber-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'
-          }`}
-        >
+        <button onClick={() => navigate('/taches')} className={`rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${pendingReview > 0 ? 'border-amber-200 bg-amber-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'}`}>
           <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">À corriger</div>
-          <div className={`mt-2 text-4xl font-bold ${pendingReview > 0 ? 'text-amber-600' : 'text-[var(--color-text)]'}`}>
-            {pendingReview}
-          </div>
+          <div className={`mt-2 text-4xl font-bold ${pendingReview > 0 ? 'text-amber-600' : 'text-[var(--color-text)]'}`}>{pendingReview}</div>
           <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">travaux soumis</div>
         </button>
-
-        <button
-          onClick={() => navigate('/notes')}
-          className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 text-left transition-transform hover:scale-[1.02]"
-        >
+        <button onClick={() => navigate('/notes')} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 text-left transition-transform hover:scale-[1.02]">
           <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Notes saisies</div>
           <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{totalGrades}</div>
-          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{completedAssigned} devoirs terminés</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{assignedTasks.length} devoirs terminés</div>
         </button>
       </div>
 
-      {/* Middle row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Groups overview */}
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Mes groupes</h2>
@@ -109,9 +73,7 @@ function TeacherDashboard() {
               const studentCount = mockGroupStudents.filter(gs => gs.groupId === g.id).length
               return (
                 <div key={g.id} className="flex items-center gap-3 p-3 rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors cursor-pointer" onClick={() => navigate('/taches')}>
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold text-sm">
-                    {g.name.charAt(0)}
-                  </div>
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold text-sm">{g.name.charAt(0)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-[var(--color-text)]">{g.name}</div>
                     {g.description && <div className="text-xs text-[var(--color-text-secondary)] truncate">{g.description}</div>}
@@ -126,7 +88,6 @@ function TeacherDashboard() {
           </div>
         </div>
 
-        {/* Grade distribution */}
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Répartition des notes</h2>
@@ -137,12 +98,12 @@ function TeacherDashboard() {
           ) : (
             <div className="space-y-4">
               {[
-                { label: 'Excellent (≥ 16)', count: excellent, color: '#16a34a', bg: 'bg-green-100' },
-                { label: 'Satisfaisant (12–16)', count: satisfactory, color: '#d97706', bg: 'bg-amber-100' },
-                { label: 'Insuffisant (< 12)', count: failing, color: '#dc2626', bg: 'bg-red-100' },
+                { label: 'Excellent (≥ 16)', count: excellent, color: '#16a34a' },
+                { label: 'Satisfaisant (12–16)', count: satisfactory, color: '#d97706' },
+                { label: 'Insuffisant (< 12)', count: failing, color: '#dc2626' },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-3">
-                  <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0`} style={{ background: item.color }} />
+                  <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
                   <span className="flex-1 text-[var(--text-sm)] text-[var(--color-text)]">{item.label}</span>
                   <div className="w-28 h-2 rounded-full bg-[var(--color-gray-bg)] flex-shrink-0">
                     <div className="h-2 rounded-full transition-all" style={{ width: `${(item.count / totalGrades) * 100}%`, background: item.color }} />
@@ -159,7 +120,6 @@ function TeacherDashboard() {
         </div>
       </div>
 
-      {/* Task completion overview */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Suivi des devoirs assignés</h2>
@@ -167,10 +127,10 @@ function TeacherDashboard() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {([
-            { label: 'À faire', count: assignedTasks.filter(t => t.status === 'pending').length, style: 'bg-gray-50 border-gray-200 text-gray-600' },
-            { label: 'En cours', count: assignedTasks.filter(t => t.status === 'in_progress').length, style: 'bg-blue-50 border-blue-200 text-blue-700' },
+            { label: 'À faire', count: tasks.filter(t => t.status === 'pending').length, style: 'bg-gray-50 border-gray-200 text-gray-600' },
+            { label: 'En cours', count: tasks.filter(t => t.status === 'in_progress').length, style: 'bg-blue-50 border-blue-200 text-blue-700' },
             { label: 'Soumis', count: pendingReview, style: 'bg-amber-50 border-amber-200 text-amber-700' },
-            { label: 'Terminés', count: completedAssigned, style: 'bg-green-50 border-green-200 text-green-700' },
+            { label: 'Terminés', count: tasks.filter(t => t.status === 'graded').length, style: 'bg-green-50 border-green-200 text-green-700' },
           ]).map(item => (
             <div key={item.label} className={`rounded-xl border p-4 text-center ${item.style}`}>
               <div className="text-3xl font-bold">{item.count}</div>
@@ -183,19 +143,21 @@ function TeacherDashboard() {
   )
 }
 
-// ─── Student Dashboard ────────────────────────────────────────────────────────
-
 function StudentDashboard() {
   const { isChapterCompleted } = useProgress()
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const genAvg = generalAverage()
-  const totalAbsenceDays = absences.reduce((s, a) => s + (a.duration === 'full' ? 1 : 0.5), 0)
-  const absenceRate = +((totalAbsenceDays / 120) * 100).toFixed(1)
-  const overdueCount = tasks.filter(t => t.status === 'overdue').length
-  const pendingCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length
-  const recentFeedbacks = [...feedbacks].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
+  const { grades, globalAverage } = useGrades()
+  const { absences, stats: absenceStats } = useAbsences()
+  const { tasks, stats: taskStats } = useTasks()
+  const { subjects } = useSubjects()
+  const { stats: sessionStats } = useStudySessions()
+
+  const genAvg = globalAverage
+  const absenceRate = absences.length > 0 ? +((absenceStats.total / 120) * 100).toFixed(1) : 0
+  const overdueCount = taskStats.overdue
+  const pendingCount = taskStats.pending + taskStats.inProgress
 
   const subjectsWithChapters = subjects.filter(s => s.chapters && s.chapters.length > 0)
   const allChapterIds = subjectsWithChapters.flatMap(s => (s.chapters ?? []).map(ch => ch.id))
@@ -203,32 +165,29 @@ function StudentDashboard() {
   const completedChaptersDashboard = allChapterIds.filter(id => isChapterCompleted(id)).length
   const globalPct = totalChaptersDashboard ? Math.round((completedChaptersDashboard / totalChaptersDashboard) * 100) : 0
 
+  const recentFeedbacks = [...mockFeedbacks].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
+
   const MENTION =
     genAvg >= 18 ? 'Très Bien' :
     genAvg >= 16 ? 'Bien' :
     genAvg >= 14 ? 'Assez Bien' :
     genAvg >= 12 ? 'Passable' : 'Insuffisant'
 
-  const studentName = user?.user_metadata?.name ?? user?.email ?? profile.name
+  const studentName = user?.user_metadata?.name ?? user?.email ?? 'Étudiant'
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      {/* Welcome */}
       <div>
         <h1 className="text-3xl font-bold text-[var(--color-text)]">
           Bonjour, {studentName.split(' ')[0]}
         </h1>
         <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
-          {user?.groupName ?? profile.year} · {profile.institution} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          {user?.groupName ?? ''} · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
         </p>
       </div>
 
-      {/* Academic KPI cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <button
-          onClick={() => navigate('/notes')}
-          className="group rounded-2xl bg-[var(--color-primary)] p-5 text-white text-left transition-transform hover:scale-[1.02]"
-        >
+        <button onClick={() => navigate('/notes')} className="group rounded-2xl bg-[var(--color-primary)] p-5 text-white text-left transition-transform hover:scale-[1.02]">
           <div className="text-[var(--text-xs)] font-medium opacity-80 uppercase tracking-wider">Moyenne Générale</div>
           <div className="mt-2 text-4xl font-bold">{genAvg}</div>
           <div className="mt-1 flex items-center justify-between">
@@ -236,46 +195,23 @@ function StudentDashboard() {
             <span className="rounded-full bg-white/20 px-2 py-0.5 text-[var(--text-xs)]">{MENTION}</span>
           </div>
         </button>
-
-        <button
-          onClick={() => navigate('/absences')}
-          className={`group rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${
-            absenceRate > 10 ? 'border-red-200 bg-red-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'
-          }`}
-        >
+        <button onClick={() => navigate('/absences')} className={`group rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${absenceRate > 10 ? 'border-red-200 bg-red-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'}`}>
           <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Absences</div>
-          <div className={`mt-2 text-4xl font-bold ${absenceRate > 10 ? 'text-red-500' : 'text-[var(--color-text)]'}`}>
-            {absenceRate}%
-          </div>
-          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{totalAbsenceDays}j · {absences.length} entrées</div>
+          <div className={`mt-2 text-4xl font-bold ${absenceRate > 10 ? 'text-red-500' : 'text-[var(--color-text)]'}`}>{absenceRate}%</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{absenceStats.total}j · {absences.length} entrées</div>
         </button>
-
-        <button
-          onClick={() => navigate('/taches')}
-          className={`group rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${
-            overdueCount > 0 ? 'border-orange-200 bg-orange-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'
-          }`}
-        >
+        <button onClick={() => navigate('/taches')} className={`group rounded-2xl border p-5 text-left transition-transform hover:scale-[1.02] ${overdueCount > 0 ? 'border-orange-200 bg-orange-50' : 'border-[var(--color-border)] bg-[var(--color-white)]'}`}>
           <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Tâches</div>
-          <div className={`mt-2 text-4xl font-bold ${overdueCount > 0 ? 'text-orange-500' : 'text-[var(--color-text)]'}`}>
-            {overdueCount > 0 ? overdueCount : pendingCount}
-          </div>
-          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">
-            {overdueCount > 0 ? `${overdueCount} en retard` : `${pendingCount} en cours / à faire`}
-          </div>
+          <div className={`mt-2 text-4xl font-bold ${overdueCount > 0 ? 'text-orange-500' : 'text-[var(--color-text)]'}`}>{overdueCount > 0 ? overdueCount : pendingCount}</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{overdueCount > 0 ? `${overdueCount} en retard` : `${pendingCount} en cours / à faire`}</div>
         </button>
-
-        <button
-          onClick={() => navigate('/analytics')}
-          className="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 text-left transition-transform hover:scale-[1.02]"
-        >
+        <button onClick={() => navigate('/analytics')} className="group rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 text-left transition-transform hover:scale-[1.02]">
           <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Analytics</div>
           <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{subjects.length}</div>
           <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">matières · {grades.length} notes</div>
         </button>
       </div>
 
-      {/* Middle row: Subject averages + Recent feedback */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
           <div className="flex items-center justify-between mb-5">
@@ -284,7 +220,8 @@ function StudentDashboard() {
           </div>
           <div className="space-y-3">
             {subjects.map(s => {
-              const avg = subjectAverage(s.id)
+              const sg = grades.filter(g => g.subject_id === s.id)
+              const avg = sg.length ? +(sg.reduce((sum, g) => sum + g.value * g.weight, 0) / sg.reduce((sum, g) => sum + g.weight, 0)).toFixed(2) : 0
               return (
                 <div key={s.id} className="flex items-center gap-3">
                   <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
@@ -309,10 +246,7 @@ function StudentDashboard() {
               const subj = subjects.find(s => s.id === f.subjectId)
               return (
                 <div key={f.id} className="flex gap-3">
-                  <div
-                    className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white text-[var(--text-xs)] font-bold"
-                    style={{ background: subj?.color || 'var(--color-primary)' }}
-                  >
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-white text-[var(--text-xs)] font-bold" style={{ background: subj?.color || 'var(--color-primary)' }}>
                     {f.teacherName.split(' ').pop()?.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -337,7 +271,6 @@ function StudentDashboard() {
         </div>
       </div>
 
-      {/* Tasks quick view */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Tâches récentes</h2>
@@ -362,7 +295,6 @@ function StudentDashboard() {
         </div>
       </div>
 
-      {/* Lesson progress */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
         <div className="flex items-center gap-8 mb-6">
           <RadialProgress value={globalPct} size={100} strokeWidth={8} label="cours" />
@@ -377,11 +309,7 @@ function StudentDashboard() {
             const done = chs.filter(ch => isChapterCompleted(ch.id)).length
             const pct = chs.length ? Math.round((done / chs.length) * 100) : 0
             return (
-              <button
-                key={s.id}
-                onClick={() => navigate(`/modules?subjectId=${s.id}`)}
-                className="rounded-xl border border-[var(--color-border)] p-3 text-left hover:border-[var(--color-primary)] transition-colors"
-              >
+              <button key={s.id} onClick={() => navigate(`/modules?subjectId=${s.id}`)} className="rounded-xl border border-[var(--color-border)] p-3 text-left hover:border-[var(--color-primary)] transition-colors">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
                   <span className="text-[var(--text-xs)] font-medium text-[var(--color-text)] truncate">{s.name}</span>
@@ -398,8 +326,6 @@ function StudentDashboard() {
     </div>
   )
 }
-
-// ─── Entry point ──────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const { user } = useAuth()

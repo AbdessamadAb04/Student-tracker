@@ -2,23 +2,50 @@ import { useState, useEffect } from 'react'
 import TaskCreationForm from '../components/tasks/TaskCreationForm'
 import TaskCard from '../components/tasks/TaskCard'
 import type { StudentTask, TaskStatus, TaskCategory, TaskPriority } from '../types/task'
-import {
-  getStudentTasks,
-  saveStudentTasks,
-  sortTasks,
-  filterTasks,
-  calculateTaskStats,
-} from '../utils/taskUtils'
+import { sortTasks, filterTasks, calculateTaskStats } from '../utils/taskUtils'
 import { useAuth } from '../context/AuthContext'
 import { mockGroups, mockGroupStudents } from '../data/mockData'
 import { supabase } from '../lib/supabase'
+import { useTasks } from '../hooks/useTasks'
+import { useSubjects } from '../hooks/useSubjects'
+
+function toStudentTask(t: Record<string, unknown>): StudentTask {
+  return {
+    id: t.id,
+    studentId: t.studentId || t.user_id || t.student_id || '',
+    type: t.type || 'simple',
+    title: t.title,
+    description: t.description || '',
+    category: t.category || 'study',
+    createdBy: t.createdBy || 'student',
+    createdDate: t.createdDate || t.created_at || new Date().toISOString(),
+    dueDate: t.dueDate || t.due_date,
+    priority: t.priority || 'medium',
+    status: t.status,
+    estimatedHours: t.estimatedHours || t.estimated_hours || 1,
+    actualHours: t.actualHours ?? t.actual_hours,
+    subjectIds: t.subject_ids || t.subjectIds || [],
+    tags: t.tags || [],
+    startedDate: t.startedDate ?? t.started_date,
+    submittedDate: t.submittedDate ?? t.submitted_date ?? t.completed_date,
+    completedDate: t.completedDate ?? t.completed_date,
+    completionQuality: t.completionQuality ?? t.completion_quality,
+    learningGain: t.learningGain ?? t.learning_gain,
+    grade: t.grade,
+    notes: t.notes,
+    subtasks: t.subtasks,
+  }
+}
 
 export default function TasksPage() {
   const { user, isConfigured } = useAuth()
   const isTeacher = user?.role === 'teacher'
 
-  // Map logged-in user in demo mode to EMSI-2024-0142 student to see mock data
   const studentId = user?.id?.startsWith('demo-') ? 'EMSI-2024-0142' : (user?.id || 'EMSI-2024-0142')
+
+  const { tasks: hookTasks, create: createTaskHook, remove: removeTaskHook, updateStatus: updateStatusHook, reload: reloadTasks } = useTasks()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { subjects } = useSubjects()
 
   const [tasks, setTasks] = useState<StudentTask[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -34,6 +61,14 @@ export default function TasksPage() {
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'dueDate' | 'priority' | 'status'>('dueDate')
+
+  // Sync hook tasks to local state (only in non-configured demo mode)
+  useEffect(() => {
+    if (!isConfigured && !isTeacher) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTasks(hookTasks.map(toStudentTask))
+    }
+  }, [hookTasks, isConfigured, isTeacher])
 
   // Load groups if user is a teacher
   useEffect(() => {
@@ -66,30 +101,7 @@ export default function TasksPage() {
           .eq('group_id', selectedGroupId)
           .then(({ data, error }) => {
             if (!error && data) {
-              const mapped: StudentTask[] = data.map((t: any) => ({
-                id: t.id,
-                studentId: t.user_id,
-                type: t.type as any,
-                title: t.title,
-                description: t.description,
-                category: t.category as any,
-                createdBy: t.created_by,
-                createdDate: t.created_at,
-                dueDate: t.due_date,
-                priority: t.priority,
-                status: t.status as any,
-                estimatedHours: t.estimated_hours,
-                actualHours: t.actual_hours ?? undefined,
-                subjectIds: t.subject_ids,
-                tags: t.tags,
-                startedDate: t.started_date ?? undefined,
-                submittedDate: t.submitted_date ?? undefined,
-                completedDate: t.completed_date ?? undefined,
-                completionQuality: (t.completion_quality as any) ?? undefined,
-                learningGain: (t.learning_gain as any) ?? undefined,
-                grade: t.grade ?? undefined,
-                notes: t.notes ?? undefined,
-              }))
+              const mapped: StudentTask[] = data.map(toStudentTask)
               // Filter to unique titles so teacher doesn't see duplicates per student
               const uniqueTasks: StudentTask[] = []
               const seen = new Set<string>()
@@ -105,36 +117,11 @@ export default function TasksPage() {
           })
       } else {
         const stored = localStorage.getItem(`student_tasks_group_${selectedGroupId}`)
-        setTasks(stored ? JSON.parse(stored) : [])
+        setTasks(stored ? JSON.parse(stored).map(toStudentTask) : [])
       }
     } else {
       // Student mode — fetch own tasks + group-assigned tasks
       if (isConfigured && user?.id) {
-        const mapRow = (t: any): StudentTask => ({
-          id: t.id,
-          studentId: t.user_id,
-          type: t.type as any,
-          title: t.title,
-          description: t.description,
-          category: t.category as any,
-          createdBy: t.created_by,
-          createdDate: t.created_at,
-          dueDate: t.due_date,
-          priority: t.priority,
-          status: t.status as any,
-          estimatedHours: t.estimated_hours,
-          actualHours: t.actual_hours ?? undefined,
-          subjectIds: t.subject_ids,
-          tags: t.tags,
-          startedDate: t.started_date ?? undefined,
-          submittedDate: t.submitted_date ?? undefined,
-          completedDate: t.completed_date ?? undefined,
-          completionQuality: (t.completion_quality as any) ?? undefined,
-          learningGain: (t.learning_gain as any) ?? undefined,
-          grade: t.grade ?? undefined,
-          notes: t.notes ?? undefined,
-        })
-
         // Own tasks (created by self)
         const ownReq = supabase.from('tasks').select('*').eq('user_id', user.id)
         // Group tasks (assigned to student's group by teacher)
@@ -147,25 +134,14 @@ export default function TasksPage() {
           // Deduplicate by id
           const seen = new Set<string>()
           const unique = allRows.filter(r => { if (seen.has(r.id)) return false; seen.add(r.id); return true })
-          setTasks(unique.map(mapRow))
+          setTasks(unique.map(toStudentTask))
         })
       } else {
-        // Demo mode: own tasks + group tasks if enrolled
-        const ownTasks = getStudentTasks(studentId)
-        const groupId = user?.groupId
-        const groupTasks: StudentTask[] = groupId
-          ? (() => {
-              const raw = localStorage.getItem(`student_tasks_group_${groupId}`)
-              const all: StudentTask[] = raw ? JSON.parse(raw) : []
-              return all.filter(t => (t as any).createdBy === 'teacher')
-            })()
-          : []
-        const seen = new Set<string>()
-        const merged = [...ownTasks, ...groupTasks].filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true })
-        setTasks(merged)
+        // Demo mode: use hook tasks (which fall back to localStorage via taskService)
+        reloadTasks()
       }
     }
-  }, [selectedGroupId, isTeacher, isConfigured, user?.id, user?.groupId, studentId])
+  }, [selectedGroupId, isTeacher, isConfigured, user?.id, user?.groupId, studentId, reloadTasks])
 
   // Filter & sort tasks
   const filteredTasks = filterTasks(tasks, {
@@ -212,14 +188,15 @@ export default function TasksPage() {
         list.push(groupTask)
         localStorage.setItem(`student_tasks_group_${selectedGroupId}`, JSON.stringify(list))
 
-        // Assign to mock students
+        // Assign to mock students via localStorage (so useTasks picks it up)
         const groupStudents = mockGroupStudents.filter(gs => gs.groupId === selectedGroupId)
-        groupStudents.forEach(gs => {
-          const sTasks = getStudentTasks(gs.studentId)
-          const newSTask = { ...task, studentId: gs.studentId, createdBy: 'teacher' as const }
-          sTasks.push(newSTask)
-          saveStudentTasks(gs.studentId, sTasks)
-        })
+        for (const gs of groupStudents) {
+          const key = `student_tasks_user_${gs.studentId}`
+          const raw = localStorage.getItem(key)
+          const existing = raw ? JSON.parse(raw) : []
+          existing.push({ ...task, studentId: gs.studentId, createdBy: 'teacher' as const })
+          localStorage.setItem(key, JSON.stringify(existing))
+        }
       }
 
       setTasks(prev => [...prev, groupTask])
@@ -242,9 +219,14 @@ export default function TasksPage() {
           tags: task.tags || [],
         })
       } else {
-        const newTasks = [...tasks, task]
-        setTasks(newTasks)
-        saveStudentTasks(studentId, newTasks)
+        await createTaskHook({
+          studentId: user?.id || studentId,
+          title: task.title,
+          description: task.description,
+          dueDate: task.dueDate,
+          subject_ids: task.subjectIds,
+          status: task.status,
+        })
       }
       setShowForm(false)
     }
@@ -255,8 +237,10 @@ export default function TasksPage() {
     
     if (isConfigured && !isTeacher) {
       await supabase.from('tasks').update({ status: newStatus, completed_date: completedDate }).eq('id', taskId)
+    } else if (!isConfigured && !isTeacher) {
+      await updateStatusHook(taskId, newStatus)
     }
-    
+
     const updated = tasks.map(t => {
       if (t.id === taskId) {
         return { ...t, status: newStatus, completedDate: completedDate ?? t.completedDate }
@@ -264,9 +248,6 @@ export default function TasksPage() {
       return t
     })
     setTasks(updated)
-    if (!isConfigured) {
-      saveStudentTasks(studentId, updated)
-    }
   }
 
   const handleEditTask = (task: StudentTask) => {
@@ -277,12 +258,10 @@ export default function TasksPage() {
   const handleDeleteTask = async (taskId: string) => {
     if (isConfigured && !isTeacher) {
       await supabase.from('tasks').delete().eq('id', taskId)
+    } else if (!isConfigured && !isTeacher) {
+      await removeTaskHook(taskId)
     }
-    const updated = tasks.filter(t => t.id !== taskId)
-    setTasks(updated)
-    if (!isConfigured) {
-      saveStudentTasks(studentId, updated)
-    }
+    setTasks(prev => prev.filter(t => t.id !== taskId))
   }
 
   const handleAssessment = async (taskId: string, quality: number, learning: number) => {
@@ -292,15 +271,13 @@ export default function TasksPage() {
         learning_gain: learning,
       }).eq('id', taskId)
     }
+
     const updated = tasks.map(t =>
       t.id === taskId
         ? { ...t, completionQuality: quality as 1 | 2 | 3 | 4 | 5, learningGain: learning as 1 | 2 | 3 | 4 | 5 }
         : t
     )
     setTasks(updated)
-    if (!isConfigured) {
-      saveStudentTasks(studentId, updated)
-    }
   }
 
   const resetFilters = () => {

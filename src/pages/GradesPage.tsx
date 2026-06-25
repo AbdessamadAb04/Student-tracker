@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { grades, mockGroups, mockGroupStudents } from '../data/mockData'
+import { mockGroups, mockGroupStudents } from '../data/mockData'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { useGrades } from '../hooks/useGrades'
+import { useSubjects } from '../hooks/useSubjects'
 import { getSubjects } from '../services/subjectService'
+import { getGrades } from '../services/gradeService'
 import type { Grade, Subject } from '../types'
 
 const typeLabel: Record<string, string> = {
@@ -29,7 +32,7 @@ function gradeColor(v: number) {
 }
 
 function getSubjectAverage(gradesList: Grade[], subjectId: string) {
-  const sg = gradesList.filter(g => g.subjectId === subjectId)
+  const sg = gradesList.filter(g => g.subject_id === subjectId)
   if (!sg.length) return 0
   const totalWeight = sg.reduce((s, g) => s + g.weight, 0)
   const weighted = sg.reduce((s, g) => s + g.value * g.weight, 0)
@@ -54,7 +57,7 @@ function buildChartData(gradesList: Grade[]) {
   const sorted = [...gradesList].sort((a, b) => a.date.localeCompare(b.date))
   const byMonth: Record<string, number[]> = {}
   sorted.forEach(g => {
-    const month = g.date.slice(0, 7) // YYYY-MM
+    const month = g.date.slice(0, 7)
     if (!byMonth[month]) byMonth[month] = []
     byMonth[month].push(g.value)
   })
@@ -68,20 +71,20 @@ export default function GradesPage() {
   const { user, isConfigured } = useAuth()
   const isTeacher = user?.role === 'teacher'
 
-  // Map logged-in user in demo mode to EMSI-2024-0142 student to see mock data
   const studentId = user?.id?.startsWith('demo-') ? 'EMSI-2024-0142' : (user?.id || 'EMSI-2024-0142')
+
+  const { grades: hookGrades } = useGrades()
+  const { subjects: hookSubjects } = useSubjects()
 
   const [localGrades, setLocalGrades] = useState<Grade[]>([])
   const [subjectsList, setSubjectsList] = useState<Subject[]>([])
   const [filterSubject, setFilterSubject] = useState<string>('all')
 
-  // Teacher Classroom state
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([])
   const [selectedGroupId, setSelectedGroupId] = useState<string>('')
   const [groupStudentsList, setGroupStudentsList] = useState<{ studentId: string; name: string }[]>([])
   const [selectedStudentId, setSelectedStudentId] = useState<string>('')
 
-  // Grade Form Inputs
   const [formSubjectId, setFormSubjectId] = useState('')
   const [formTitle, setFormTitle] = useState('')
   const [formValue, setFormValue] = useState('')
@@ -89,7 +92,9 @@ export default function GradesPage() {
   const [formType, setFormType] = useState<'exam' | 'tp' | 'cc' | 'project' | 'quiz'>('cc')
   const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0])
 
-  // Load groups if teacher
+  const effectiveGrades = isTeacher ? localGrades : hookGrades
+  const effectiveSubjects = isTeacher ? subjectsList : hookSubjects
+
   useEffect(() => {
     if (isTeacher) {
       if (isConfigured) {
@@ -109,7 +114,6 @@ export default function GradesPage() {
     }
   }, [isTeacher, isConfigured])
 
-  // Load students of selected group
   useEffect(() => {
     if (isTeacher && selectedGroupId) {
       if (isConfigured) {
@@ -146,7 +150,6 @@ export default function GradesPage() {
     }
   }, [isTeacher, selectedGroupId, isConfigured])
 
-  // Load subjects
   useEffect(() => {
     if (isTeacher) {
       if (selectedStudentId) {
@@ -159,17 +162,9 @@ export default function GradesPage() {
         setSubjectsList([])
         setFormSubjectId('')
       }
-    } else {
-      if (user?.id) {
-        getSubjects(user.id).then(list => {
-          setSubjectsList(list)
-          if (list.length > 0) setFormSubjectId(list[0].id)
-        })
-      }
     }
-  }, [isTeacher, selectedStudentId, user?.id, isConfigured])
+  }, [isTeacher, selectedStudentId])
 
-  // Fetch grades for either student or selected student
   const loadGradesData = async (uid: string) => {
     if (!uid) return
     if (isConfigured) {
@@ -181,7 +176,7 @@ export default function GradesPage() {
         const mapped: Grade[] = data.map(g => ({
           id: g.id,
           studentId: g.user_id,
-          subjectId: g.subject_id,
+          subject_id: g.subject_id,
           title: g.title,
           value: g.value,
           weight: g.weight,
@@ -196,9 +191,8 @@ export default function GradesPage() {
       if (studentGrades) {
         setLocalGrades(JSON.parse(studentGrades))
       } else {
-        // Fallback to mockData
-        const filtered = grades.filter(g => g.studentId === uid)
-        setLocalGrades(filtered)
+        const list = await getGrades(uid)
+        setLocalGrades(list.filter(g => g.studentId === uid))
       }
     }
   }
@@ -210,10 +204,8 @@ export default function GradesPage() {
       } else {
         setLocalGrades([])
       }
-    } else {
-      loadGradesData(studentId)
     }
-  }, [isTeacher, selectedStudentId, studentId, isConfigured])
+  }, [isTeacher, selectedStudentId, isConfigured])
 
   const handleAddGrade = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -233,7 +225,7 @@ export default function GradesPage() {
     const newGrade: Grade = {
       id: `grade-${Date.now()}`,
       studentId: selectedStudentId,
-      subjectId: formSubjectId,
+      subject_id: formSubjectId,
       title: formTitle,
       value: valueNum,
       weight: isNaN(weightNum) ? 1 : weightNum,
@@ -259,15 +251,13 @@ export default function GradesPage() {
         return
       }
     } else {
-      // Demo mode: save to student's local grades
       const studentGrades = localStorage.getItem(`student_grades_${selectedStudentId}`)
       const list: Grade[] = studentGrades ? JSON.parse(studentGrades) : []
       list.push(newGrade)
       localStorage.setItem(`student_grades_${selectedStudentId}`, JSON.stringify(list))
 
-      // Also update general list for demo if needed
       const allGrades = localStorage.getItem('demo_all_grades')
-      const allList: Grade[] = allGrades ? JSON.parse(allGrades) : [...grades]
+      const allList: Grade[] = allGrades ? JSON.parse(allGrades) : []
       allList.push(newGrade)
       localStorage.setItem('demo_all_grades', JSON.stringify(allList))
     }
@@ -276,22 +266,20 @@ export default function GradesPage() {
     setFormValue('')
     setFormWeight('1')
     setFormDate(new Date().toISOString().split('T')[0])
-    
-    // Refresh list
+
     loadGradesData(selectedStudentId)
   }
 
   const filtered = filterSubject === 'all'
-    ? localGrades
-    : localGrades.filter(g => g.subjectId === filterSubject)
+    ? effectiveGrades
+    : effectiveGrades.filter(g => g.subject_id === filterSubject)
 
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date))
-  const chartData = buildChartData(localGrades)
-  const genAvg = getGeneralAverage(localGrades, subjectsList)
+  const chartData = buildChartData(effectiveGrades)
+  const genAvg = getGeneralAverage(effectiveGrades, effectiveSubjects)
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[var(--color-text)]">
@@ -437,18 +425,15 @@ export default function GradesPage() {
         </div>
       ) : (
         <>
-          {/* General average + subject cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* General average */}
             <div className="col-span-1 flex flex-col items-center justify-center rounded-2xl bg-[var(--color-primary)] p-6 text-white shadow-sm">
               <div className="text-[var(--text-xs)] font-medium uppercase tracking-wider opacity-80">Moyenne Générale</div>
               <div className="mt-2 text-5xl font-bold">{genAvg}</div>
               <div className="mt-1 text-[var(--text-xs)] opacity-70">/ 20</div>
             </div>
 
-            {/* Subject averages */}
-            {subjectsList.slice(0, 3).map(s => {
-              const avg = getSubjectAverage(localGrades, s.id)
+            {effectiveSubjects.slice(0, 3).map(s => {
+              const avg = getSubjectAverage(effectiveGrades, s.id)
               return (
                 <div key={s.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 shadow-sm">
                   <div className="flex items-center gap-2 mb-3">
@@ -465,12 +450,11 @@ export default function GradesPage() {
             })}
           </div>
 
-          {/* All subject averages */}
           <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
             <h2 className="mb-4 text-[var(--text-base)] font-semibold text-[var(--color-text)]">Moyennes par matière</h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {subjectsList.map(s => {
-                const avg = getSubjectAverage(localGrades, s.id)
+              {effectiveSubjects.map(s => {
+                const avg = getSubjectAverage(effectiveGrades, s.id)
                 return (
                   <button
                     key={s.id}
@@ -489,7 +473,6 @@ export default function GradesPage() {
             </div>
           </div>
 
-          {/* Chart */}
           {!isTeacher && chartData.length > 0 && (
             <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
               <h2 className="mb-6 text-[var(--text-base)] font-semibold text-[var(--color-text)]">Évolution des notes dans le temps</h2>
@@ -517,14 +500,13 @@ export default function GradesPage() {
             </div>
           )}
 
-          {/* Grades table */}
           <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] overflow-hidden">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
               <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">
                 Détail des notes
                 {filterSubject !== 'all' && (
                   <span className="ml-2 text-[var(--text-xs)] font-normal text-[var(--color-text-secondary)]">
-                    — filtré par {subjectsList.find(s => s.id === filterSubject)?.name}
+                    — filtré par {effectiveSubjects.find(s => s.id === filterSubject)?.name}
                   </span>
                 )}
               </h2>
@@ -550,7 +532,7 @@ export default function GradesPage() {
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
                   {sorted.map(g => {
-                    const subj = subjectsList.find(s => s.id === g.subjectId)
+                    const subj = effectiveSubjects.find(s => s.id === g.subject_id)
                     return (
                       <tr key={g.id} className="hover:bg-[var(--color-gray-bg)] transition-colors">
                         <td className="px-6 py-3 text-[var(--color-text-secondary)] whitespace-nowrap">

@@ -1,75 +1,36 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { v4 as uid } from '../lib/uid'
-import { subjects } from '../data/mockData'
+import { useSubjects } from '../hooks/useSubjects'
+import { useChapters } from '../hooks/useChapters'
 import { useProgress } from '../context/ProgressContext'
 import type { Subject, SubjectChapter, ChapterResource } from '../types'
 import ProgressBar from '../components/shared/ProgressBar'
 
-const EDITS_KEY = 'student-tracker-chapter-edits'
-const RESOURCES_KEY = 'student-tracker-chapter-resources'
-
-interface ChapterEdit {
-  title: string
-  content: string
-}
-
-function loadEdits(): Record<string, ChapterEdit> {
+function loadChaptersFromStorage(subjectId: string): SubjectChapter[] {
   try {
-    const raw = localStorage.getItem(EDITS_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch { return {} }
-}
-
-function saveEdits(edits: Record<string, ChapterEdit>) {
-  localStorage.setItem(EDITS_KEY, JSON.stringify(edits))
-}
-
-function loadResources(): Record<string, ChapterResource[]> {
-  try {
-    const raw = localStorage.getItem(RESOURCES_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch { return {} }
-}
-
-function saveResources(res: Record<string, ChapterResource[]>) {
-  localStorage.setItem(RESOURCES_KEY, JSON.stringify(res))
-}
-
-function getMergedChapters(subject: Subject): SubjectChapter[] {
-  const edits = loadEdits()
-  const resources = loadResources()
-  return (subject.chapters ?? []).map(ch => ({
-    ...ch,
-    title: edits[ch.id]?.title ?? ch.title,
-    content: edits[ch.id]?.content ?? ch.content,
-    resources: resources[ch.id] ?? ch.resources,
-  }))
+    const raw = localStorage.getItem(`chapters_${subjectId}`)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
 }
 
 export default function Modules() {
+  const { subjects } = useSubjects()
   const { isChapterCompleted, completeChapter, uncompleteChapter } = useProgress()
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
-  const [chapters, setChapters] = useState<SubjectChapter[]>([])
+  const subjectId = searchParams.get('subjectId')
+  const { chapters, updateChapter } = useChapters(subjectId ?? '')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
 
   useEffect(() => {
-    const subjectId = searchParams.get('subjectId')
-    if (!subjectId) { setSelectedSubject(null); setChapters([]); return }
-
-    const found = subjects.find(s => s.id === subjectId) ?? null
-    if (found) {
-      setSelectedSubject(found)
-      setChapters(getMergedChapters(found))
-    }
-  }, [searchParams])
-
-  function refreshChapters(subject: Subject) {
-    setChapters(getMergedChapters(subject))
-  }
+    const id = searchParams.get('subjectId')
+    if (!id) { setSelectedSubject(null); return }
+    const found = subjects.find(s => s.id === id) ?? null
+    setSelectedSubject(found)
+  }, [searchParams, subjects])
 
   function handleToggleComplete(chapterId: string) {
     isChapterCompleted(chapterId) ? uncompleteChapter(chapterId) : completeChapter(chapterId)
@@ -81,20 +42,17 @@ export default function Modules() {
     setEditContent(chapter.content)
   }
 
-  function saveEdit(subject: Subject) {
+  function saveEdit() {
     if (!editingId) return
-    const edits = loadEdits()
-    edits[editingId] = { title: editTitle, content: editContent }
-    saveEdits(edits)
+    updateChapter(editingId, { title: editTitle, content: editContent })
     setEditingId(null)
-    refreshChapters(subject)
   }
 
   function cancelEdit() {
     setEditingId(null)
   }
 
-  function handleFileUpload(subject: Subject, chapterId: string, e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileUpload(chapterId: string, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || file.type !== 'application/pdf') return
 
@@ -107,29 +65,26 @@ export default function Modules() {
       uploadedAt: new Date().toISOString(),
     }
 
-    const all = loadResources()
-    if (!all[chapterId]) all[chapterId] = []
-    all[chapterId] = [...all[chapterId], resource]
-    saveResources(all)
-    refreshChapters(subject)
+    const chapter = chapters.find(c => c.id === chapterId)
+    if (chapter) {
+      updateChapter(chapterId, { resources: [...(chapter.resources ?? []), resource] })
+    }
     e.target.value = ''
   }
 
-  function removeResource(subject: Subject, chapterId: string, resourceId: string) {
-    const all = loadResources()
-    if (all[chapterId]) {
-      all[chapterId] = all[chapterId].filter(r => r.id !== resourceId)
-      saveResources(all)
-      refreshChapters(subject)
+  function removeResource(chapterId: string, resourceId: string) {
+    const chapter = chapters.find(c => c.id === chapterId)
+    if (chapter) {
+      updateChapter(chapterId, { resources: (chapter.resources ?? []).filter(r => r.id !== resourceId) })
     }
   }
 
   const completedCount = chapters.filter(ch => isChapterCompleted(ch.id)).length
   const pct = chapters.length ? Math.round((completedCount / chapters.length) * 100) : 0
 
-  const allSubjects = subjects.filter(s => s.chapters && s.chapters.length > 0)
-  const totalChapters = allSubjects.reduce((s, sub) => s + (sub.chapters ?? []).length, 0)
-  const allChapterIds = allSubjects.flatMap(s => (s.chapters ?? []).map(ch => ch.id))
+  const academicSubjects = subjects.filter(s => s.type === 'academic')
+  const totalChapters = academicSubjects.reduce((sum, s) => sum + loadChaptersFromStorage(s.id).length, 0)
+  const allChapterIds = academicSubjects.flatMap(s => loadChaptersFromStorage(s.id).map(ch => ch.id))
   const globalCompleted = allChapterIds.filter(id => isChapterCompleted(id)).length
   const globalPct = totalChapters ? Math.round((globalCompleted / totalChapters) * 100) : 0
 
@@ -137,7 +92,7 @@ export default function Modules() {
     return (
       <div className="mx-auto max-w-4xl">
         <button
-          onClick={() => { setSelectedSubject(null); setSearchParams({}); setChapters([]) }}
+          onClick={() => { setSelectedSubject(null); setSearchParams({}) }}
           className="mb-6 flex items-center gap-1 text-[var(--text-xs)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
         >
           ← Toutes les matières
@@ -184,7 +139,7 @@ export default function Modules() {
                           placeholder="Contenu du chapitre"
                         />
                         <div className="flex gap-2">
-                          <button onClick={() => saveEdit(selectedSubject)} className="rounded-lg bg-[var(--color-primary)] px-4 py-1.5 text-[var(--text-xs)] text-white hover:opacity-90">Enregistrer</button>
+                          <button onClick={saveEdit} className="rounded-lg bg-[var(--color-primary)] px-4 py-1.5 text-[var(--text-xs)] text-white hover:opacity-90">Enregistrer</button>
                           <button onClick={cancelEdit} className="rounded-lg border border-[var(--color-border)] px-4 py-1.5 text-[var(--text-xs)] text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-bg)]">Annuler</button>
                         </div>
                       </div>
@@ -205,7 +160,7 @@ export default function Modules() {
                         <label className="flex cursor-pointer items-center gap-1 rounded-lg border border-[var(--color-border)] px-3 py-1 text-[var(--text-xs)] text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-bg)]">
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                           Ajouter un PDF
-                          <input type="file" accept=".pdf" onChange={e => handleFileUpload(selectedSubject, ch.id, e)} className="hidden" />
+                          <input type="file" accept=".pdf" onChange={e => handleFileUpload(ch.id, e)} className="hidden" />
                         </label>
                       </div>
                       {ch.resources.length === 0 ? (
@@ -216,7 +171,7 @@ export default function Modules() {
                             <div key={r.id} className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-gray-bg)] px-3 py-1.5">
                               <svg className="h-3.5 w-3.5 text-[var(--color-danger)]" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" stroke="white" strokeWidth="2" fill="none" /></svg>
                               <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline truncate max-w-[160px]">{r.name}</a>
-                              <button onClick={() => removeResource(selectedSubject, ch.id, r.id)} className="text-[var(--text-xs)] text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] ml-1">✕</button>
+                              <button onClick={() => removeResource(ch.id, r.id)} className="text-[var(--text-xs)] text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] ml-1">✕</button>
                             </div>
                           ))}
                         </div>
@@ -243,7 +198,7 @@ export default function Modules() {
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] font-bold text-lg">{globalPct}%</div>
           <div>
             <h2 className="text-[var(--text-sm)] font-semibold text-[var(--color-text)]">Progression globale</h2>
-            <p className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">{globalCompleted}/{totalChapters} chapitres complétés sur {allSubjects.length} matières</p>
+            <p className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">{globalCompleted}/{totalChapters} chapitres complétés sur {academicSubjects.length} matières</p>
           </div>
         </div>
         <ProgressBar value={globalPct} />
@@ -251,8 +206,8 @@ export default function Modules() {
 
       {/* Subject cards */}
       <div className="grid grid-cols-2 gap-4">
-        {allSubjects.map(sub => {
-          const subChapters = getMergedChapters(sub)
+        {academicSubjects.map(sub => {
+          const subChapters = loadChaptersFromStorage(sub.id)
           const done = subChapters.filter(ch => isChapterCompleted(ch.id)).length
           const subPct = subChapters.length ? Math.round((done / subChapters.length) * 100) : 0
           return (

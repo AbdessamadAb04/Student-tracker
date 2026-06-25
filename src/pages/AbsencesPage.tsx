@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { absences, mockGroups, mockGroupStudents } from '../data/mockData'
+import { mockGroups, mockGroupStudents } from '../data/mockData'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { getSubjects } from '../services/subjectService'
+import { useAbsences } from '../hooks/useAbsences'
+import { useSubjects } from '../hooks/useSubjects'
 import type { Absence, Subject } from '../types'
 
 const TOTAL_SCHOOL_DAYS = 120 // approximate semester days
@@ -16,11 +17,8 @@ export default function AbsencesPage() {
   const { user, isConfigured } = useAuth()
   const isTeacher = user?.role === 'teacher'
 
-  // Map logged-in user in demo mode to EMSI-2024-0142 student to see mock data
-  const studentId = user?.id?.startsWith('demo-') ? 'EMSI-2024-0142' : (user?.id || 'EMSI-2024-0142')
-
-  const [localAbsences, setLocalAbsences] = useState<Absence[]>([])
-  const [subjectsList, setSubjectsList] = useState<Subject[]>([])
+  const { absences } = useAbsences()
+  const { subjects: subjectsList } = useSubjects()
 
   // Teacher Classroom state
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([])
@@ -88,67 +86,14 @@ export default function AbsencesPage() {
     }
   }, [isTeacher, selectedGroupId, isConfigured])
 
-  // Load subjects
+  // Set form subject when subjects load
   useEffect(() => {
-    if (isTeacher) {
-      const firstStudentId = roster[0]?.studentId
-      if (firstStudentId) {
-        getSubjects(firstStudentId).then(list => {
-          setSubjectsList(list)
-          if (list.length > 0) setFormSubjectId(list[0].id)
-          else setFormSubjectId('')
-        })
-      } else {
-        // Clear or wait for roster
-        setSubjectsList([])
-        setFormSubjectId('')
-      }
+    if (subjectsList.length > 0) {
+      setFormSubjectId(subjectsList[0].id)
     } else {
-      if (user?.id) {
-        getSubjects(user.id).then(list => {
-          setSubjectsList(list)
-          if (list.length > 0) setFormSubjectId(list[0].id)
-        })
-      }
+      setFormSubjectId('')
     }
-  }, [isTeacher, roster, user?.id, isConfigured])
-
-  // Fetch absences for student
-  const loadAbsencesData = async (uid: string) => {
-    if (isConfigured) {
-      const { data, error } = await supabase
-        .from('absences')
-        .select('*')
-        .eq('user_id', uid)
-      if (!error && data) {
-        const mapped: Absence[] = data.map(a => ({
-          id: a.id,
-          studentId: a.user_id,
-          date: a.date,
-          duration: a.duration as 'half' | 'full',
-          reason: a.reason ?? undefined,
-          excused: a.excused,
-          certificateProvided: a.certificate_provided,
-          subjectId: a.subject_id ?? undefined,
-        }))
-        setLocalAbsences(mapped)
-      }
-    } else {
-      const stored = localStorage.getItem(`student_absences_${uid}`)
-      if (stored) {
-        setLocalAbsences(JSON.parse(stored))
-      } else {
-        const filtered = absences.filter(a => a.studentId === uid)
-        setLocalAbsences(filtered)
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (!isTeacher) {
-      loadAbsencesData(studentId)
-    }
-  }, [isTeacher, studentId, isConfigured])
+  }, [subjectsList])
 
   const handleCheckboxChange = (studId: string, field: 'absent' | 'reason' | 'excused', value: any) => {
     setRoster(prev => prev.map(item => {
@@ -193,7 +138,7 @@ export default function AbsencesPage() {
           reason: s.reason || undefined,
           excused: s.excused,
           certificateProvided: s.excused,
-          subjectId: formSubjectId || undefined,
+          subject_id: formSubjectId || undefined,
         }
 
         const studentAbs = localStorage.getItem(`student_absences_${s.studentId}`)
@@ -202,7 +147,7 @@ export default function AbsencesPage() {
         localStorage.setItem(`student_absences_${s.studentId}`, JSON.stringify(list))
 
         const allAbs = localStorage.getItem('demo_all_absences')
-        const allList: Absence[] = allAbs ? JSON.parse(allAbs) : [...absences]
+        const allList: Absence[] = allAbs ? JSON.parse(allAbs) : []
         allList.push(newAbsence)
         localStorage.setItem('demo_all_absences', JSON.stringify(allList))
       })
@@ -232,18 +177,18 @@ export default function AbsencesPage() {
       }))
   }
 
-  const totalDays = countDays(localAbsences)
-  const excusedDays = countDays(localAbsences.filter(a => a.excused))
-  const unexcusedDays = countDays(localAbsences.filter(a => !a.excused))
+  const totalDays = countDays(absences)
+  const excusedDays = countDays(absences.filter(a => a.excused))
+  const unexcusedDays = countDays(absences.filter(a => !a.excused))
   const absenceRate = +((totalDays / TOTAL_SCHOOL_DAYS) * 100).toFixed(1)
-  const monthlyData = buildMonthlyData(localAbsences)
+  const monthlyData = buildMonthlyData(absences)
 
   const rateColor =
     absenceRate > 15 ? 'text-red-500' :
     absenceRate > 8  ? 'text-amber-500' :
     'text-green-600'
 
-  const sorted = [...localAbsences].sort((a, b) => b.date.localeCompare(a.date))
+  const sorted = [...absences].sort((a, b) => b.date.localeCompare(a.date))
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -401,19 +346,19 @@ export default function AbsencesPage() {
             <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5">
               <div className="text-[var(--text-xs)] text-[var(--color-text-secondary)] uppercase tracking-wider">Jours totaux</div>
               <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{totalDays}</div>
-              <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{localAbsences.length} entrées</div>
+              <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{absences.length} entrées</div>
             </div>
 
             <div className="rounded-2xl border border-green-100 bg-green-50 p-5">
               <div className="text-[var(--text-xs)] text-green-700 font-medium uppercase tracking-wider">Excusées</div>
               <div className="mt-2 text-4xl font-bold text-green-700">{excusedDays}j</div>
-              <div className="mt-1 text-[var(--text-xs)] text-green-600">{localAbsences.filter(a => a.excused).length} absences</div>
+              <div className="mt-1 text-[var(--text-xs)] text-green-600">{absences.filter(a => a.excused).length} absences</div>
             </div>
 
             <div className="rounded-2xl border border-red-100 bg-red-50 p-5">
               <div className="text-[var(--text-xs)] text-red-700 font-medium uppercase tracking-wider">Non excusées</div>
               <div className="mt-2 text-4xl font-bold text-red-500">{unexcusedDays}j</div>
-              <div className="mt-1 text-[var(--text-xs)] text-red-500">{localAbsences.filter(a => !a.excused).length} absences</div>
+              <div className="mt-1 text-[var(--text-xs)] text-red-500">{absences.filter(a => !a.excused).length} absences</div>
             </div>
           </div>
 
@@ -460,7 +405,7 @@ export default function AbsencesPage() {
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
                   {sorted.map(a => {
-                    const subj = subjectsList.find(s => s.id === a.subjectId)
+                    const subj = subjectsList.find(s => s.id === a.subject_id)
                     return (
                       <tr key={a.id} className="hover:bg-[var(--color-gray-bg)] transition-colors">
                         <td className="px-6 py-3 whitespace-nowrap text-[var(--color-text-secondary)]">

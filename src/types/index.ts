@@ -1,3 +1,5 @@
+import type { Database } from './database'
+
 // ─── Existing Lesson / Module Types ─────────────────────────────────────────
 
 export interface Lesson {
@@ -21,7 +23,7 @@ export interface Module {
   color: string
 }
 
-export interface UserProfile {
+export interface Profile {
   name: string
   initials: string
   track: string
@@ -33,8 +35,8 @@ export interface UserProfile {
 }
 
 export interface ProgressState {
-  completedLessons: string[]   // lesson ids
-  completedChapters?: string[] // chapter ids
+  completedLessons: string[]
+  completedChapters?: string[]
   lastSeenLesson: string | null
 }
 
@@ -57,49 +59,59 @@ export interface SubjectChapter {
   resources: ChapterResource[]
 }
 
+export type SubjectRow = Database['public']['Tables']['subjects']['Row']
+
 export interface Subject {
   id: string
+  user_id: string
   name: string
   color: string
   type: SubjectType
-  coefficient?: number    // only for academic subjects
-  teacher?: string        // only for academic subjects
-  isActive?: boolean
+  coefficient?: number
+  teacher?: string
+  is_active: boolean
+  created_at: string
   chapters?: SubjectChapter[]
 }
+
+export type GradeRow = Database['public']['Tables']['grades']['Row']
 
 export interface Grade {
   id: string
   studentId: string
-  subjectId: string
-  title: string           // "Examen Final", "TP1", "Contrôle continu"
-  value: number           // 0–20
-  weight: number          // coefficient
-  date: string            // ISO date string
+  subject_id: string
+  title: string
+  value: number
+  weight: number
+  date: string
   teacher: string
   type: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
 }
 
+export type AbsenceRow = Database['public']['Tables']['absences']['Row']
+
 export interface Absence {
   id: string
   studentId: string
-  date: string            // ISO date string
+  date: string
   duration: 'half' | 'full'
   reason?: string
   excused: boolean
   certificateProvided: boolean
-  subjectId?: string
+  subject_id?: string
 }
 
 export type TaskStatus = 'pending' | 'in_progress' | 'submitted' | 'graded' | 'overdue'
+
+export type TaskRow = Database['public']['Tables']['tasks']['Row']
 
 export interface Task {
   id: string
   studentId: string
   title: string
   description: string
-  dueDate: string         // ISO date string
-  subjectId: string
+  dueDate: string
+  subject_ids: string[]
   status: TaskStatus
   grade?: number
   submittedDate?: string
@@ -112,7 +124,7 @@ export interface TeacherFeedback {
   subjectId: string
   comment: string
   rating: 1 | 2 | 3 | 4 | 5
-  date: string            // ISO date string
+  date: string
   isPositive: boolean
 }
 

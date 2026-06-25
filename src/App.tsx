@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Sidebar from './components/shared/Sidebar'
+import RoleGuard from './components/auth/RoleGuard'
 import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import Profil from './pages/Profil'
@@ -12,9 +13,6 @@ import AnalyticsPage from './pages/AnalyticsPage'
 import ProgressTrackerPage from './pages/ProgressTrackerPage'
 import ReflectionPage from './pages/ReflectionPage'
 import AuthForm from './components/auth/AuthForm'
-import { profile } from './data/mockData'
-
-// ─── Auth Guard ───────────────────────────────────────────────────────────────
 
 function ProtectedLayout() {
   const { user, loading } = useAuth()
@@ -33,8 +31,6 @@ function ProtectedLayout() {
     weekday: 'long', day: '2-digit', month: 'long', year: 'numeric',
   })
 
-  const displayName = user?.user_metadata?.name ?? profile.name
-
   return (
     <div className="flex min-h-screen bg-[var(--color-background)]">
       <Sidebar />
@@ -46,9 +42,9 @@ function ProtectedLayout() {
           </div>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--text-xs)] font-semibold text-white">
-              {displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+              {user.user_metadata?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() ?? 'ET'}
             </div>
-            <span className="text-[var(--text-sm)] text-[var(--color-text)]">{displayName}</span>
+            <span className="text-[var(--text-sm)] text-[var(--color-text)]">{user.user_metadata?.name ?? user.email}</span>
           </div>
         </header>
         <main className="flex-1 p-8">
@@ -57,20 +53,29 @@ function ProtectedLayout() {
             <Route path="/notes" element={<GradesPage />} />
             <Route path="/absences" element={<AbsencesPage />} />
             <Route path="/taches" element={<TasksPage />} />
-            <Route path="/avis" element={<FeedbackPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/progression" element={<ProgressTrackerPage />} />
-            <Route path="/reflexion" element={<ReflectionPage />} />
-            <Route path="/modules" element={<Modules />} />
             <Route path="/profil" element={<Profil />} />
+
+            <Route path="/modules" element={
+              <RoleGuard allowedRoles={['student']}><Modules /></RoleGuard>
+            } />
+            <Route path="/avis" element={
+              <RoleGuard allowedRoles={['student']}><FeedbackPage /></RoleGuard>
+            } />
+            <Route path="/analytics" element={
+              <RoleGuard allowedRoles={['student']}><AnalyticsPage /></RoleGuard>
+            } />
+            <Route path="/progression" element={
+              <RoleGuard allowedRoles={['student']}><ProgressTrackerPage /></RoleGuard>
+            } />
+            <Route path="/reflexion" element={
+              <RoleGuard allowedRoles={['student']}><ReflectionPage /></RoleGuard>
+            } />
           </Routes>
         </main>
       </div>
     </div>
   )
 }
-
-// ─── Root App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
   return (

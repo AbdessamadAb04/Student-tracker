@@ -1,6 +1,6 @@
 import type {
   Module,
-  UserProfile,
+  Profile,
   Subject,
   Grade,
   Absence,
@@ -10,7 +10,7 @@ import type {
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
-export const profile: UserProfile = {
+export const profile: Profile = {
   name: 'Abdessamad Abounouh',
   initials: 'AA',
   track: 'Ingénierie Informatique – Développement Web Full-Stack',
@@ -167,68 +167,68 @@ export const modules: Module[] = [
 
 export const grades: Grade[] = [
   // Algorithmes Avancés
-  { id: 'g1',  studentId: 'EMSI-2024-0142', subjectId: 's1', title: 'Contrôle Continu 1', value: 15.5, weight: 1, date: '2024-10-10', teacher: 'Pr. Khaled',   type: 'cc' },
-  { id: 'g2',  studentId: 'EMSI-2024-0142', subjectId: 's1', title: 'TP Graphes',          value: 17,   weight: 1, date: '2024-11-05', teacher: 'Pr. Khaled',   type: 'tp' },
-  { id: 'g3',  studentId: 'EMSI-2024-0142', subjectId: 's1', title: 'Examen Final S1',     value: 14,   weight: 2, date: '2025-01-20', teacher: 'Pr. Khaled',   type: 'exam' },
-  { id: 'g4',  studentId: 'EMSI-2024-0142', subjectId: 's1', title: 'Contrôle Continu 2', value: 16,   weight: 1, date: '2025-03-12', teacher: 'Pr. Khaled',   type: 'cc' },
-  { id: 'g5',  studentId: 'EMSI-2024-0142', subjectId: 's1', title: 'Projet Algorithmique', value: 18, weight: 2, date: '2025-05-08', teacher: 'Pr. Khaled',   type: 'project' },
+  { id: 'g1',  studentId: 'EMSI-2024-0142', subject_id: 's1', title: 'Contrôle Continu 1', value: 15.5, weight: 1, date: '2024-10-10', teacher: 'Pr. Khaled',   type: 'cc' },
+  { id: 'g2',  studentId: 'EMSI-2024-0142', subject_id: 's1', title: 'TP Graphes',          value: 17,   weight: 1, date: '2024-11-05', teacher: 'Pr. Khaled',   type: 'tp' },
+  { id: 'g3',  studentId: 'EMSI-2024-0142', subject_id: 's1', title: 'Examen Final S1',     value: 14,   weight: 2, date: '2025-01-20', teacher: 'Pr. Khaled',   type: 'exam' },
+  { id: 'g4',  studentId: 'EMSI-2024-0142', subject_id: 's1', title: 'Contrôle Continu 2', value: 16,   weight: 1, date: '2025-03-12', teacher: 'Pr. Khaled',   type: 'cc' },
+  { id: 'g5',  studentId: 'EMSI-2024-0142', subject_id: 's1', title: 'Projet Algorithmique', value: 18, weight: 2, date: '2025-05-08', teacher: 'Pr. Khaled',   type: 'project' },
 
   // Développement Web
-  { id: 'g6',  studentId: 'EMSI-2024-0142', subjectId: 's2', title: 'Quiz HTML/CSS',       value: 19,   weight: 1, date: '2024-10-15', teacher: 'Pr. Karimi',  type: 'quiz' },
-  { id: 'g7',  studentId: 'EMSI-2024-0142', subjectId: 's2', title: 'TP React',             value: 18.5, weight: 1, date: '2024-11-20', teacher: 'Pr. Karimi',  type: 'tp' },
-  { id: 'g8',  studentId: 'EMSI-2024-0142', subjectId: 's2', title: 'Examen Final S1',     value: 16,   weight: 2, date: '2025-01-22', teacher: 'Pr. Karimi',  type: 'exam' },
-  { id: 'g9',  studentId: 'EMSI-2024-0142', subjectId: 's2', title: 'Projet Web Full-Stack', value: 20, weight: 2, date: '2025-05-15', teacher: 'Pr. Karimi',  type: 'project' },
+  { id: 'g6',  studentId: 'EMSI-2024-0142', subject_id: 's2', title: 'Quiz HTML/CSS',       value: 19,   weight: 1, date: '2024-10-15', teacher: 'Pr. Karimi',  type: 'quiz' },
+  { id: 'g7',  studentId: 'EMSI-2024-0142', subject_id: 's2', title: 'TP React',             value: 18.5, weight: 1, date: '2024-11-20', teacher: 'Pr. Karimi',  type: 'tp' },
+  { id: 'g8',  studentId: 'EMSI-2024-0142', subject_id: 's2', title: 'Examen Final S1',     value: 16,   weight: 2, date: '2025-01-22', teacher: 'Pr. Karimi',  type: 'exam' },
+  { id: 'g9',  studentId: 'EMSI-2024-0142', subject_id: 's2', title: 'Projet Web Full-Stack', value: 20, weight: 2, date: '2025-05-15', teacher: 'Pr. Karimi',  type: 'project' },
 
   // Base de Données
-  { id: 'g10', studentId: 'EMSI-2024-0142', subjectId: 's3', title: 'Contrôle Continu 1', value: 13,   weight: 1, date: '2024-10-18', teacher: 'Pr. Ouarrari', type: 'cc' },
-  { id: 'g11', studentId: 'EMSI-2024-0142', subjectId: 's3', title: 'TP SQL',              value: 15,   weight: 1, date: '2024-11-28', teacher: 'Pr. Ouarrari', type: 'tp' },
-  { id: 'g12', studentId: 'EMSI-2024-0142', subjectId: 's3', title: 'Examen Final S1',     value: 12.5, weight: 2, date: '2025-01-25', teacher: 'Pr. Ouarrari', type: 'exam' },
-  { id: 'g13', studentId: 'EMSI-2024-0142', subjectId: 's3', title: 'Contrôle Continu 2', value: 14,   weight: 1, date: '2025-03-20', teacher: 'Pr. Ouarrari', type: 'cc' },
+  { id: 'g10', studentId: 'EMSI-2024-0142', subject_id: 's3', title: 'Contrôle Continu 1', value: 13,   weight: 1, date: '2024-10-18', teacher: 'Pr. Ouarrari', type: 'cc' },
+  { id: 'g11', studentId: 'EMSI-2024-0142', subject_id: 's3', title: 'TP SQL',              value: 15,   weight: 1, date: '2024-11-28', teacher: 'Pr. Ouarrari', type: 'tp' },
+  { id: 'g12', studentId: 'EMSI-2024-0142', subject_id: 's3', title: 'Examen Final S1',     value: 12.5, weight: 2, date: '2025-01-25', teacher: 'Pr. Ouarrari', type: 'exam' },
+  { id: 'g13', studentId: 'EMSI-2024-0142', subject_id: 's3', title: 'Contrôle Continu 2', value: 14,   weight: 1, date: '2025-03-20', teacher: 'Pr. Ouarrari', type: 'cc' },
 
   // Systèmes Distribués
-  { id: 'g14', studentId: 'EMSI-2024-0142', subjectId: 's4', title: 'Contrôle Continu 1', value: 14.5, weight: 1, date: '2024-10-22', teacher: 'Pr. Nasri',   type: 'cc' },
-  { id: 'g15', studentId: 'EMSI-2024-0142', subjectId: 's4', title: 'TP Docker/K8s',       value: 16,   weight: 1, date: '2024-12-05', teacher: 'Pr. Nasri',   type: 'tp' },
-  { id: 'g16', studentId: 'EMSI-2024-0142', subjectId: 's4', title: 'Examen Final S1',     value: 13,   weight: 2, date: '2025-01-28', teacher: 'Pr. Nasri',   type: 'exam' },
+  { id: 'g14', studentId: 'EMSI-2024-0142', subject_id: 's4', title: 'Contrôle Continu 1', value: 14.5, weight: 1, date: '2024-10-22', teacher: 'Pr. Nasri',   type: 'cc' },
+  { id: 'g15', studentId: 'EMSI-2024-0142', subject_id: 's4', title: 'TP Docker/K8s',       value: 16,   weight: 1, date: '2024-12-05', teacher: 'Pr. Nasri',   type: 'tp' },
+  { id: 'g16', studentId: 'EMSI-2024-0142', subject_id: 's4', title: 'Examen Final S1',     value: 13,   weight: 2, date: '2025-01-28', teacher: 'Pr. Nasri',   type: 'exam' },
 
   // Gestion de Projet
-  { id: 'g17', studentId: 'EMSI-2024-0142', subjectId: 's5', title: 'Présentation SCRUM',  value: 17.5, weight: 1, date: '2024-11-10', teacher: 'Pr. Benali',  type: 'project' },
-  { id: 'g18', studentId: 'EMSI-2024-0142', subjectId: 's5', title: 'Contrôle Continu 1', value: 16,   weight: 1, date: '2025-02-05', teacher: 'Pr. Benali',  type: 'cc' },
+  { id: 'g17', studentId: 'EMSI-2024-0142', subject_id: 's5', title: 'Présentation SCRUM',  value: 17.5, weight: 1, date: '2024-11-10', teacher: 'Pr. Benali',  type: 'project' },
+  { id: 'g18', studentId: 'EMSI-2024-0142', subject_id: 's5', title: 'Contrôle Continu 1', value: 16,   weight: 1, date: '2025-02-05', teacher: 'Pr. Benali',  type: 'cc' },
 
   // Sécurité Informatique
-  { id: 'g19', studentId: 'EMSI-2024-0142', subjectId: 's6', title: 'Contrôle Continu 1', value: 15,   weight: 1, date: '2024-11-15', teacher: 'Pr. Tahiri',  type: 'cc' },
-  { id: 'g20', studentId: 'EMSI-2024-0142', subjectId: 's6', title: 'TP Pentest',          value: 18,   weight: 1, date: '2025-01-10', teacher: 'Pr. Tahiri',  type: 'tp' },
-  { id: 'g21', studentId: 'EMSI-2024-0142', subjectId: 's6', title: 'Examen Final S1',     value: 14.5, weight: 2, date: '2025-02-01', teacher: 'Pr. Tahiri',  type: 'exam' },
+  { id: 'g19', studentId: 'EMSI-2024-0142', subject_id: 's6', title: 'Contrôle Continu 1', value: 15,   weight: 1, date: '2024-11-15', teacher: 'Pr. Tahiri',  type: 'cc' },
+  { id: 'g20', studentId: 'EMSI-2024-0142', subject_id: 's6', title: 'TP Pentest',          value: 18,   weight: 1, date: '2025-01-10', teacher: 'Pr. Tahiri',  type: 'tp' },
+  { id: 'g21', studentId: 'EMSI-2024-0142', subject_id: 's6', title: 'Examen Final S1',     value: 14.5, weight: 2, date: '2025-02-01', teacher: 'Pr. Tahiri',  type: 'exam' },
 ]
 
 // ─── Absences ────────────────────────────────────────────────────────────────
 
 export const absences: Absence[] = [
-  { id: 'a1',  studentId: 'EMSI-2024-0142', date: '2024-10-03', duration: 'full', reason: 'Maladie',           excused: true,  certificateProvided: true,  subjectId: 's1' },
-  { id: 'a2',  studentId: 'EMSI-2024-0142', date: '2024-10-15', duration: 'half', reason: 'Rendez-vous médical', excused: true, certificateProvided: true,  subjectId: 's2' },
-  { id: 'a3',  studentId: 'EMSI-2024-0142', date: '2024-11-07', duration: 'full', reason: 'Personnel',          excused: false, certificateProvided: false, subjectId: 's3' },
-  { id: 'a4',  studentId: 'EMSI-2024-0142', date: '2024-11-22', duration: 'half', reason: undefined,            excused: false, certificateProvided: false, subjectId: 's4' },
-  { id: 'a5',  studentId: 'EMSI-2024-0142', date: '2024-12-10', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subjectId: 's1' },
-  { id: 'a6',  studentId: 'EMSI-2024-0142', date: '2024-12-11', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subjectId: 's5' },
-  { id: 'a7',  studentId: 'EMSI-2024-0142', date: '2025-01-08', duration: 'half', reason: 'Transport',          excused: false, certificateProvided: false, subjectId: 's6' },
-  { id: 'a8',  studentId: 'EMSI-2024-0142', date: '2025-02-14', duration: 'full', reason: 'Famille',            excused: true,  certificateProvided: false, subjectId: 's2' },
-  { id: 'a9',  studentId: 'EMSI-2024-0142', date: '2025-03-05', duration: 'half', reason: undefined,            excused: false, certificateProvided: false, subjectId: 's3' },
-  { id: 'a10', studentId: 'EMSI-2024-0142', date: '2025-04-20', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subjectId: 's4' },
+  { id: 'a1',  studentId: 'EMSI-2024-0142', date: '2024-10-03', duration: 'full', reason: 'Maladie',           excused: true,  certificateProvided: true,  subject_id: 's1' },
+  { id: 'a2',  studentId: 'EMSI-2024-0142', date: '2024-10-15', duration: 'half', reason: 'Rendez-vous médical', excused: true, certificateProvided: true,  subject_id: 's2' },
+  { id: 'a3',  studentId: 'EMSI-2024-0142', date: '2024-11-07', duration: 'full', reason: 'Personnel',          excused: false, certificateProvided: false, subject_id: 's3' },
+  { id: 'a4',  studentId: 'EMSI-2024-0142', date: '2024-11-22', duration: 'half', reason: undefined,            excused: false, certificateProvided: false, subject_id: 's4' },
+  { id: 'a5',  studentId: 'EMSI-2024-0142', date: '2024-12-10', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subject_id: 's1' },
+  { id: 'a6',  studentId: 'EMSI-2024-0142', date: '2024-12-11', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subject_id: 's5' },
+  { id: 'a7',  studentId: 'EMSI-2024-0142', date: '2025-01-08', duration: 'half', reason: 'Transport',          excused: false, certificateProvided: false, subject_id: 's6' },
+  { id: 'a8',  studentId: 'EMSI-2024-0142', date: '2025-02-14', duration: 'full', reason: 'Famille',            excused: true,  certificateProvided: false, subject_id: 's2' },
+  { id: 'a9',  studentId: 'EMSI-2024-0142', date: '2025-03-05', duration: 'half', reason: undefined,            excused: false, certificateProvided: false, subject_id: 's3' },
+  { id: 'a10', studentId: 'EMSI-2024-0142', date: '2025-04-20', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subject_id: 's4' },
 ]
 
 // ─── Tasks ───────────────────────────────────────────────────────────────────
 
 export const tasks: Task[] = [
-  { id: 't1',  studentId: 'EMSI-2024-0142', title: 'TP Tri Fusion',            description: 'Implémenter merge sort en Python avec analyse de complexité.', dueDate: '2024-10-25', subjectId: 's1', status: 'graded',    grade: 17,   submittedDate: '2024-10-24' },
-  { id: 't2',  studentId: 'EMSI-2024-0142', title: 'Rapport SQL Avancé',       description: 'Rédiger un rapport sur les jointures et sous-requêtes.',        dueDate: '2024-11-01', subjectId: 's3', status: 'graded',    grade: 15,   submittedDate: '2024-10-31' },
-  { id: 't3',  studentId: 'EMSI-2024-0142', title: 'Maquette UI React',        description: 'Créer une maquette Figma et l\'implémenter en React.',         dueDate: '2024-11-15', subjectId: 's2', status: 'graded',    grade: 19,   submittedDate: '2024-11-13' },
-  { id: 't4',  studentId: 'EMSI-2024-0142', title: 'Étude de cas SCRUM',      description: 'Analyser un projet réel avec la méthodologie SCRUM.',           dueDate: '2024-11-20', subjectId: 's5', status: 'graded',    grade: 16,   submittedDate: '2024-11-19' },
-  { id: 't5',  studentId: 'EMSI-2024-0142', title: 'Lab Pentest',             description: 'Réaliser un test de pénétration sur un environnement sandbox.', dueDate: '2025-01-15', subjectId: 's6', status: 'graded',    grade: 18,   submittedDate: '2025-01-14' },
-  { id: 't6',  studentId: 'EMSI-2024-0142', title: 'Projet Microservices',    description: 'Concevoir une architecture microservices avec Docker.',          dueDate: '2025-02-28', subjectId: 's4', status: 'submitted', grade: undefined, submittedDate: '2025-02-26' },
-  { id: 't7',  studentId: 'EMSI-2024-0142', title: 'Devoir Graphes NP-hard',  description: 'Démontrer la réduction du problème du sac à dos.',              dueDate: '2025-03-10', subjectId: 's1', status: 'overdue',   grade: undefined },
-  { id: 't8',  studentId: 'EMSI-2024-0142', title: 'Mini-Projet API REST',    description: 'Développer une API REST complète avec authentification JWT.',  dueDate: '2025-04-05', subjectId: 's2', status: 'in_progress' },
-  { id: 't9',  studentId: 'EMSI-2024-0142', title: 'Rapport Sécurité Réseau', description: 'Analyser les vulnérabilités d\'un réseau d\'entreprise simulé.', dueDate: '2025-04-20', subjectId: 's6', status: 'pending' },
-  { id: 't10', studentId: 'EMSI-2024-0142', title: 'Optimisation BDD',        description: 'Optimiser les requêtes d\'une base de données existante.',      dueDate: '2025-04-30', subjectId: 's3', status: 'pending' },
-  { id: 't11', studentId: 'EMSI-2024-0142', title: 'Plan de Projet PFE',      description: 'Rédiger le plan complet du projet de fin d\'études.',           dueDate: '2025-05-20', subjectId: 's5', status: 'in_progress' },
+  { id: 't1',  studentId: 'EMSI-2024-0142', title: 'TP Tri Fusion',            description: 'Implémenter merge sort en Python avec analyse de complexité.', dueDate: '2024-10-25', subject_ids: ['s1'], status: 'graded',    grade: 17,   submittedDate: '2024-10-24' },
+  { id: 't2',  studentId: 'EMSI-2024-0142', title: 'Rapport SQL Avancé',       description: 'Rédiger un rapport sur les jointures et sous-requêtes.',        dueDate: '2024-11-01', subject_ids: ['s3'], status: 'graded',    grade: 15,   submittedDate: '2024-10-31' },
+  { id: 't3',  studentId: 'EMSI-2024-0142', title: 'Maquette UI React',        description: 'Créer une maquette Figma et l\'implémenter en React.',         dueDate: '2024-11-15', subject_ids: ['s2'], status: 'graded',    grade: 19,   submittedDate: '2024-11-13' },
+  { id: 't4',  studentId: 'EMSI-2024-0142', title: 'Étude de cas SCRUM',      description: 'Analyser un projet réel avec la méthodologie SCRUM.',           dueDate: '2024-11-20', subject_ids: ['s5'], status: 'graded',    grade: 16,   submittedDate: '2024-11-19' },
+  { id: 't5',  studentId: 'EMSI-2024-0142', title: 'Lab Pentest',             description: 'Réaliser un test de pénétration sur un environnement sandbox.', dueDate: '2025-01-15', subject_ids: ['s6'], status: 'graded',    grade: 18,   submittedDate: '2025-01-14' },
+  { id: 't6',  studentId: 'EMSI-2024-0142', title: 'Projet Microservices',    description: 'Concevoir une architecture microservices avec Docker.',          dueDate: '2025-02-28', subject_ids: ['s4'], status: 'submitted', grade: undefined, submittedDate: '2025-02-26' },
+  { id: 't7',  studentId: 'EMSI-2024-0142', title: 'Devoir Graphes NP-hard',  description: 'Démontrer la réduction du problème du sac à dos.',              dueDate: '2025-03-10', subject_ids: ['s1'], status: 'overdue',   grade: undefined },
+  { id: 't8',  studentId: 'EMSI-2024-0142', title: 'Mini-Projet API REST',    description: 'Développer une API REST complète avec authentification JWT.',  dueDate: '2025-04-05', subject_ids: ['s2'], status: 'in_progress' },
+  { id: 't9',  studentId: 'EMSI-2024-0142', title: 'Rapport Sécurité Réseau', description: 'Analyser les vulnérabilités d\'un réseau d\'entreprise simulé.', dueDate: '2025-04-20', subject_ids: ['s6'], status: 'pending' },
+  { id: 't10', studentId: 'EMSI-2024-0142', title: 'Optimisation BDD',        description: 'Optimiser les requêtes d\'une base de données existante.',      dueDate: '2025-04-30', subject_ids: ['s3'], status: 'pending' },
+  { id: 't11', studentId: 'EMSI-2024-0142', title: 'Plan de Projet PFE',      description: 'Rédiger le plan complet du projet de fin d\'études.',           dueDate: '2025-05-20', subject_ids: ['s5'], status: 'in_progress' },
 ]
 
 // ─── Teacher Feedback ────────────────────────────────────────────────────────

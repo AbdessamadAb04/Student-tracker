@@ -1,35 +1,38 @@
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
-import { grades, subjects, absences, tasks } from '../data/mockData'
+import { useGrades } from '../hooks/useGrades'
+import { useSubjects } from '../hooks/useSubjects'
+import { useAbsences } from '../hooks/useAbsences'
+import { useTasks } from '../hooks/useTasks'
+import { useStudySessions } from '../hooks/useStudySessions'
+import { useReflections } from '../hooks/useReflections'
 import { useProgress } from '../context/ProgressContext'
 
-function subjectAverage(subjectId: string) {
-  const sg = grades.filter(g => g.subjectId === subjectId)
-  if (!sg.length) return 0
-  const totalWeight = sg.reduce((s, g) => s + g.weight, 0)
-  const weighted = sg.reduce((s, g) => s + g.value * g.weight, 0)
-  return +(weighted / totalWeight).toFixed(2)
-}
+export default function AnalyticsPage() {
+  const { grades, averageBySubject } = useGrades()
+  const { subjects } = useSubjects()
+  const { absences } = useAbsences()
+  const { tasks } = useTasks()
+  useStudySessions()
+  useReflections()
+  const { isChapterCompleted } = useProgress()
 
-function generalAverage() {
+  if (subjects.length === 0) return null
+
   let totalCoeff = 0, weightedSum = 0
   subjects.forEach(s => {
-    const avg = subjectAverage(s.id)
+    const avg = averageBySubject[s.id] ?? 0
     const coeff = s.coefficient ?? 1
     weightedSum += avg * coeff
     totalCoeff += coeff
   })
-  return totalCoeff ? +(weightedSum / totalCoeff).toFixed(2) : 0
-}
+  const genAvg = totalCoeff ? +(weightedSum / totalCoeff).toFixed(2) : 0
 
-function buildRadarData() {
-  return subjects.map(s => ({
-    subject: s.name.split(' ')[0], // short label
-    Note: subjectAverage(s.id),
+  const radarData = subjects.map(s => ({
+    subject: s.name.split(' ')[0],
+    Note: averageBySubject[s.id] ?? 0,
     fullName: s.name,
   }))
-}
 
-function buildTrendData() {
   const sorted = [...grades].sort((a, b) => a.date.localeCompare(b.date))
   const byMonth: Record<string, number[]> = {}
   sorted.forEach(g => {
@@ -37,29 +40,19 @@ function buildTrendData() {
     if (!byMonth[month]) byMonth[month] = []
     byMonth[month].push(g.value)
   })
-  return Object.entries(byMonth).map(([month, vals]) => ({
+  const trendData = Object.entries(byMonth).map(([month, vals]) => ({
     month: new Date(month + '-01').toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
     Moyenne: +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1),
     Cible: 14,
   }))
-}
 
-function countAbsenceDays() {
-  return absences.reduce((s, a) => s + (a.duration === 'full' ? 1 : 0.5), 0)
-}
-
-export default function AnalyticsPage() {
-  const { isChapterCompleted } = useProgress()
-  const genAvg = generalAverage()
-  const radarData = buildRadarData()
-  const trendData = buildTrendData()
-  const absenceDays = countAbsenceDays()
+  const absenceDays = absences.reduce((s, a) => s + (a.duration === 'full' ? 1 : 0.5), 0)
   const absenceRate = +((absenceDays / 120) * 100).toFixed(1)
   const overdueCount = tasks.filter(t => t.status === 'overdue').length
   const completionRate = +(tasks.filter(t => ['submitted', 'graded'].includes(t.status)).length / tasks.length * 100).toFixed(0)
 
-  const bestSubject = subjects.reduce((best, s) => subjectAverage(s.id) > subjectAverage(best.id) ? s : best, subjects[0])
-  const weakestSubject = subjects.reduce((worst, s) => subjectAverage(s.id) < subjectAverage(worst.id) ? s : worst, subjects[0])
+  const bestSubject = subjects.reduce((best, s) => (averageBySubject[s.id] ?? 0) > (averageBySubject[best.id] ?? 0) ? s : best, subjects[0])
+  const weakestSubject = subjects.reduce((worst, s) => (averageBySubject[s.id] ?? 0) < (averageBySubject[worst.id] ?? 0) ? s : worst, subjects[0])
 
   const subjectsWithChapters = subjects.filter(s => s.chapters && s.chapters.length > 0)
   const totalChapters = subjectsWithChapters.reduce((s, sub) => s + (sub.chapters ?? []).length, 0)
@@ -179,7 +172,7 @@ export default function AnalyticsPage() {
               <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ background: bestSubject.color }} />
               <span className="font-semibold text-[var(--color-text)]">{bestSubject.name}</span>
             </div>
-            <div className="mt-1 text-2xl font-bold" style={{ color: bestSubject.color }}>{subjectAverage(bestSubject.id)}/20</div>
+            <div className="mt-1 text-2xl font-bold" style={{ color: bestSubject.color }}>{averageBySubject[bestSubject.id] ?? 0}/20</div>
           </div>
 
           <div className="rounded-xl bg-amber-50 border border-amber-100 p-4">
@@ -188,7 +181,7 @@ export default function AnalyticsPage() {
               <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ background: weakestSubject.color }} />
               <span className="font-semibold text-[var(--color-text)]">{weakestSubject.name}</span>
             </div>
-            <div className="mt-1 text-2xl font-bold" style={{ color: weakestSubject.color }}>{subjectAverage(weakestSubject.id)}/20</div>
+            <div className="mt-1 text-2xl font-bold" style={{ color: weakestSubject.color }}>{averageBySubject[weakestSubject.id] ?? 0}/20</div>
           </div>
 
           <div className="rounded-xl bg-purple-50 border border-purple-100 p-4">
@@ -225,8 +218,8 @@ export default function AnalyticsPage() {
         </div>
         <div className="space-y-3">
           {subjects.map(s => {
-            const avg = subjectAverage(s.id)
-            const gradeCount = grades.filter(g => g.subjectId === s.id).length
+            const avg = averageBySubject[s.id] ?? 0
+            const gradeCount = grades.filter(g => g.subject_id === s.id).length
             const chs = s.chapters ?? []
             const chDone = chs.filter(ch => isChapterCompleted(ch.id)).length
             const chPct = chs.length ? Math.round((chDone / chs.length) * 100) : null

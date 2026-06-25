@@ -1,4 +1,5 @@
-import { feedbacks, subjects } from '../data/mockData'
+import { feedbacks } from '../data/mockData'
+import { useSubjects } from '../hooks/useSubjects'
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -16,6 +17,7 @@ const avgRating = +(feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.leng
 const positiveCount = feedbacks.filter(f => f.isPositive).length
 
 export default function FeedbackPage() {
+  const { subjects } = useSubjects()
   const sorted = [...feedbacks].sort((a, b) => b.date.localeCompare(a.date))
 
   // Group by subject
@@ -28,6 +30,11 @@ export default function FeedbackPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
+      {/* Demo banner */}
+      <div className="mb-4 rounded bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+        Mode démonstration — données fictives
+      </div>
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-[var(--color-text)]">Avis des Professeurs</h1>
