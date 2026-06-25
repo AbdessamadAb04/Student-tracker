@@ -34,10 +34,26 @@ export interface UserProfile {
 
 export interface ProgressState {
   completedLessons: string[]   // lesson ids
+  completedChapters: string[] // chapter ids
   lastSeenLesson: string | null
 }
 
 // ─── Academic Types ──────────────────────────────────────────────────────────
+
+export interface ChapterResource {
+  id: string
+  name: string
+  type: 'course' | 'exercise' | 'other'
+  fileUrl: string
+  uploadedAt: string
+}
+
+export interface SubjectChapter {
+  id: string
+  title: string
+  content: string
+  resources: ChapterResource[]
+}
 
 export interface Subject {
   id: string
@@ -45,6 +61,7 @@ export interface Subject {
   color: string
   coefficient: number
   teacher: string
+  chapters: SubjectChapter[]
 }
 
 export interface Grade {
@@ -57,17 +74,6 @@ export interface Grade {
   date: string            // ISO date string
   teacher: string
   type: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
-}
-
-export interface Absence {
-  id: string
-  studentId: string
-  date: string            // ISO date string
-  duration: 'half' | 'full'
-  reason?: string
-  excused: boolean
-  certificateProvided: boolean
-  subjectId?: string
 }
 
 export type TaskStatus = 'pending' | 'in_progress' | 'submitted' | 'graded' | 'overdue'
@@ -84,22 +90,9 @@ export interface Task {
   submittedDate?: string
 }
 
-export interface TeacherFeedback {
-  id: string
-  studentId: string
-  teacherName: string
-  subjectId: string
-  comment: string
-  rating: 1 | 2 | 3 | 4 | 5
-  date: string            // ISO date string
-  isPositive: boolean
-}
-
 export interface AcademicStats {
   generalAverage: number
   averageBySubject: Record<string, number>
-  absenceRate: number
-  totalAbsenceDays: number
   tasksOnTime: number
   tasksOverdue: number
   taskCompletionRate: number

@@ -3,9 +3,7 @@ import type {
   UserProfile,
   Subject,
   Grade,
-  Absence,
   Task,
-  TeacherFeedback,
 } from '../types'
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
@@ -24,12 +22,60 @@ export const profile: UserProfile = {
 // ─── Subjects ────────────────────────────────────────────────────────────────
 
 export const subjects: Subject[] = [
-  { id: 's1', name: 'Algorithmes Avancés',    color: '#7F77DD', coefficient: 4, teacher: 'Pr. Khaled' },
-  { id: 's2', name: 'Développement Web',       color: '#1D9E75', coefficient: 3, teacher: 'Pr. Karimi' },
-  { id: 's3', name: 'Base de Données',         color: '#BA7517', coefficient: 3, teacher: 'Pr. Ouarrari' },
-  { id: 's4', name: 'Systèmes Distribués',     color: '#D4537E', coefficient: 4, teacher: 'Pr. Nasri' },
-  { id: 's5', name: 'Gestion de Projet',       color: '#0E7490', coefficient: 2, teacher: 'Pr. Benali' },
-  { id: 's6', name: 'Sécurité Informatique',  color: '#9333EA', coefficient: 3, teacher: 'Pr. Tahiri' },
+  {
+    id: 's1', name: 'Algorithmes Avancés', color: '#7F77DD', coefficient: 4, teacher: 'Pr. Khaled',
+    chapters: [
+      { id: 's1-ch1', title: 'Introduction aux algorithmes', content: 'Notions fondamentales : définition d\'un algorithme, propriétés (entrée, sortie, finitude, efficacité), représentation (pseudo-code, organigramme), complexité algorithmique et notation Big O.', resources: [] },
+      { id: 's1-ch2', title: 'Structures de données', content: 'Les structures de données essentielles : tableaux, listes chaînées, piles, files, arbres binaires, tables de hachage. Complexités opérationnelles et cas d\'usage.', resources: [] },
+      { id: 's1-ch3', title: 'Algorithmes de tri et recherche', content: 'Étude détaillée des algorithmes de tri (bubble, selection, insertion, merge, quick) et de recherche (linéaire, dichotomique). Analyse comparative des complexités.', resources: [] },
+      { id: 's1-ch4', title: 'Graphes et optimisation', content: 'Représentation des graphes (matrice d\'adjacence, listes), parcours (BFS, DFS), plus court chemin (Dijkstra, Bellman-Ford), algorithmes gloutons et programmation dynamique.', resources: [] },
+    ],
+  },
+  {
+    id: 's2', name: 'Développement Web', color: '#1D9E75', coefficient: 3, teacher: 'Pr. Karimi',
+    chapters: [
+      { id: 's2-ch1', title: 'HTML & CSS Avancé', content: 'Approfondissement HTML5 : balises sémantiques, accessibilité, formulaires. CSS avancé : Flexbox, Grid, animations, responsive design avec media queries.', resources: [] },
+      { id: 's2-ch2', title: 'JavaScript Fondamentaux', content: 'Les bases du langage : variables (let/const/var), types, fonctions, closures, prototypes, programmation asynchrone (callbacks, Promises, async/await).', resources: [] },
+      { id: 's2-ch3', title: 'Framework React', content: 'Introduction à React : composants, JSX, props, state, hooks (useState, useEffect, useContext), cycles de vie, routage avec React Router.', resources: [] },
+      { id: 's2-ch4', title: 'API REST & Backend', content: 'Conception d\'API RESTful : méthodes HTTP, CRUD, authentification JWT, documentation avec Swagger. Introduction à Node.js et Express.', resources: [] },
+    ],
+  },
+  {
+    id: 's3', name: 'Base de Données', color: '#BA7517', coefficient: 3, teacher: 'Pr. Ouarrari',
+    chapters: [
+      { id: 's3-ch1', title: 'Modélisation conceptuelle', content: 'Modèle Entité-Association (EA) : entités, attributs, associations, cardinalités. Passage au modèle relationnel. Dépendances fonctionnelles et formes normales (1NF à 3NF).', resources: [] },
+      { id: 's3-ch2', title: 'SQL et requêtes avancées', content: 'Langage SQL : DDL (CREATE, ALTER), DML (SELECT, INSERT, UPDATE, DELETE), jointures (INNER, LEFT, RIGHT, FULL), sous-requêtes, fonctions d\'agrégation, index.', resources: [] },
+      { id: 's3-ch3', title: 'Normalisation et optimisation', content: 'Théorie de la normalisation, décomposition sans perte, dépendances fonctionnelles. Optimisation des requêtes, plans d\'exécution, indexation avancée.', resources: [] },
+      { id: 's3-ch4', title: 'NoSQL et Big Data', content: 'Introduction aux bases NoSQL : document (MongoDB), colonne (Cassandra), clé-valeur (Redis), graphe (Neo4j). Comparaison avec le relationnel, cas d\'usage.', resources: [] },
+    ],
+  },
+  {
+    id: 's4', name: 'Systèmes Distribués', color: '#D4537E', coefficient: 4, teacher: 'Pr. Nasri',
+    chapters: [
+      { id: 's4-ch1', title: 'Introduction aux systèmes distribués', content: 'Définition, caractéristiques (concurrence, absence d\'horloge globale, indépendance des pannes). Modèles d\'architecture, théorème CAP, scalabilité.', resources: [] },
+      { id: 's4-ch2', title: 'Communication et synchronisation', content: 'Modèles de communication : RPC, RMI, sockets. Synchronisation : horloges logiques (Lamport), exclusion mutuelle, élection (Bully, anneau).', resources: [] },
+      { id: 's4-ch3', title: 'Docker et conteneurisation', content: 'Concepts de conteneurisation, Docker : images, conteneurs, Dockerfile, Docker Compose. Orchestration avec Kubernetes : pods, services, déploiements.', resources: [] },
+      { id: 's4-ch4', title: 'Architectures microservices', content: 'Principes des microservices, communication (synchrone/asynchrone), API Gateway, service discovery, tolérance aux pannes (circuit breaker), monitoring.', resources: [] },
+    ],
+  },
+  {
+    id: 's5', name: 'Gestion de Projet', color: '#0E7490', coefficient: 2, teacher: 'Pr. Benali',
+    chapters: [
+      { id: 's5-ch1', title: 'Méthodologies agiles', content: 'Manifeste agile, principes et valeurs. Comparaison des méthodes traditionnelles (cycle en V) vs agiles. Scrum, Kanban, Extreme Programming (XP).', resources: [] },
+      { id: 's5-ch2', title: 'SCRUM en pratique', content: 'Rôles (Product Owner, Scrum Master, Dev Team), artefacts (Product Backlog, Sprint Backlog, Incrément), événements (Sprint Planning, Daily, Review, Retrospective).', resources: [] },
+      { id: 's5-ch3', title: 'Planification et estimation', content: 'Techniques d\'estimation : story points, planning poker, velocity. Diagramme de Gantt, chemin critique (PERT/CPM). Outils : Jira, Trello, MS Project.', resources: [] },
+      { id: 's5-ch4', title: 'Gestion des risques', content: 'Identification, analyse (qualitative/quantitative) et mitigation des risques. Matrice des risques, plan de contingence. Suivi et contrôle des risques.', resources: [] },
+    ],
+  },
+  {
+    id: 's6', name: 'Sécurité Informatique', color: '#9333EA', coefficient: 3, teacher: 'Pr. Tahiri',
+    chapters: [
+      { id: 's6-ch1', title: 'Concepts fondamentaux', content: 'Triade CIA (Confidentialité, Intégrité, Disponibilité), authentification, autorisation, non-répudiation. Types d\'attaques : passive, active, interne, externe.', resources: [] },
+      { id: 's6-ch2', title: 'Cryptographie', content: 'Cryptographie symétrique (AES, DES) et asymétrique (RSA, ECC). Fonctions de hachage (SHA-256), signatures numériques, certificats SSL/TLS, PKI.', resources: [] },
+      { id: 's6-ch3', title: 'Sécurité réseau', content: 'Pare-feu, IDS/IPS, VPN, segmentation réseau. Protocoles sécurisés : HTTPS, SSH, SFTP. Attaques réseau : MITM, DDoS, spoofing.', resources: [] },
+      { id: 's6-ch4', title: 'Tests de pénétration', content: 'Méthodologie des tests d\'intrusion : reconnaissance, scanning, exploitation, post-exploitation. Outils : Nmap, Metasploit, Burp Suite. Rapport et remédiation.', resources: [] },
+    ],
+  },
 ]
 
 // ─── Modules (lesson tracker) ────────────────────────────────────────────────
@@ -152,21 +198,6 @@ export const grades: Grade[] = [
   { id: 'g21', studentId: 'EMSI-2024-0142', subjectId: 's6', title: 'Examen Final S1',     value: 14.5, weight: 2, date: '2025-02-01', teacher: 'Pr. Tahiri',  type: 'exam' },
 ]
 
-// ─── Absences ────────────────────────────────────────────────────────────────
-
-export const absences: Absence[] = [
-  { id: 'a1',  studentId: 'EMSI-2024-0142', date: '2024-10-03', duration: 'full', reason: 'Maladie',           excused: true,  certificateProvided: true,  subjectId: 's1' },
-  { id: 'a2',  studentId: 'EMSI-2024-0142', date: '2024-10-15', duration: 'half', reason: 'Rendez-vous médical', excused: true, certificateProvided: true,  subjectId: 's2' },
-  { id: 'a3',  studentId: 'EMSI-2024-0142', date: '2024-11-07', duration: 'full', reason: 'Personnel',          excused: false, certificateProvided: false, subjectId: 's3' },
-  { id: 'a4',  studentId: 'EMSI-2024-0142', date: '2024-11-22', duration: 'half', reason: undefined,            excused: false, certificateProvided: false, subjectId: 's4' },
-  { id: 'a5',  studentId: 'EMSI-2024-0142', date: '2024-12-10', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subjectId: 's1' },
-  { id: 'a6',  studentId: 'EMSI-2024-0142', date: '2024-12-11', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subjectId: 's5' },
-  { id: 'a7',  studentId: 'EMSI-2024-0142', date: '2025-01-08', duration: 'half', reason: 'Transport',          excused: false, certificateProvided: false, subjectId: 's6' },
-  { id: 'a8',  studentId: 'EMSI-2024-0142', date: '2025-02-14', duration: 'full', reason: 'Famille',            excused: true,  certificateProvided: false, subjectId: 's2' },
-  { id: 'a9',  studentId: 'EMSI-2024-0142', date: '2025-03-05', duration: 'half', reason: undefined,            excused: false, certificateProvided: false, subjectId: 's3' },
-  { id: 'a10', studentId: 'EMSI-2024-0142', date: '2025-04-20', duration: 'full', reason: 'Maladie',            excused: true,  certificateProvided: true,  subjectId: 's4' },
-]
-
 // ─── Tasks ───────────────────────────────────────────────────────────────────
 
 export const tasks: Task[] = [
@@ -183,15 +214,4 @@ export const tasks: Task[] = [
   { id: 't11', studentId: 'EMSI-2024-0142', title: 'Plan de Projet PFE',      description: 'Rédiger le plan complet du projet de fin d\'études.',           dueDate: '2025-05-20', subjectId: 's5', status: 'in_progress' },
 ]
 
-// ─── Teacher Feedback ────────────────────────────────────────────────────────
 
-export const feedbacks: TeacherFeedback[] = [
-  { id: 'f1',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Karimi',  subjectId: 's2', rating: 5, isPositive: true,  date: '2024-11-20', comment: 'Excellent travail sur le TP React. La composantisation est très propre et le code TypeScript est bien typé. Continuez ainsi !' },
-  { id: 'f2',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Khaled',  subjectId: 's1', rating: 4, isPositive: true,  date: '2024-11-06', comment: 'Bonne compréhension des algorithmes de graphe. L\'analyse de complexité est correcte, mais pourrait être plus détaillée dans le rapport.' },
-  { id: 'f3',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Ouarrari', subjectId: 's3', rating: 3, isPositive: false, date: '2024-12-01', comment: 'Les notions de base SQL sont acquises, mais les requêtes imbriquées manquent de précision. Revoir les sous-requêtes corrélées.' },
-  { id: 'f4',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Benali',  subjectId: 's5', rating: 5, isPositive: true,  date: '2025-01-15', comment: 'Présentation SCRUM remarquable. Excellente maîtrise des cérémonies Agile et du Product Backlog. Très bonne participation en classe.' },
-  { id: 'f5',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Nasri',   subjectId: 's4', rating: 3, isPositive: false, date: '2025-02-10', comment: 'Le rendu Docker est correct mais la configuration Kubernetes présente quelques erreurs. Des efforts supplémentaires sont nécessaires.' },
-  { id: 'f6',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Tahiri',  subjectId: 's6', rating: 4, isPositive: true,  date: '2025-02-20', comment: 'Très bon lab de pentest. La méthodologie est rigoureuse et le rapport est bien structuré. Bon sens de l\'analyse des vulnérabilités.' },
-  { id: 'f7',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Karimi',  subjectId: 's2', rating: 5, isPositive: true,  date: '2025-03-15', comment: 'Le projet full-stack est impressionnant. Architecture propre, bonnes pratiques respectées, et une belle UI. Excellent candidat pour le marché du travail.' },
-  { id: 'f8',  studentId: 'EMSI-2024-0142', teacherName: 'Pr. Khaled',  subjectId: 's1', rating: 4, isPositive: true,  date: '2025-04-01', comment: 'Le projet algorithmique montre une vraie maturité. Les optimisations proposées sont pertinentes et bien argumentées.' },
-]
