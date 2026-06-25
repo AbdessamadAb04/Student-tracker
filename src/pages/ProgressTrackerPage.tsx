@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { GraduationCap, Sprout, Book, TrendingUp, Clock } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useSubjects } from '../hooks/useSubjects'
 import { useStudySessions } from '../hooks/useStudySessions'
@@ -25,7 +26,9 @@ function AddSubjectModal({ onAdd, onClose }: { onAdd: (s: Omit<Subject, 'id'>) =
             {(['academic', 'personal'] as const).map(t => (
               <label key={t} className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 p-3 cursor-pointer transition-all ${type === t ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]' : 'border-[var(--color-border)]'}`}>
                 <input type="radio" className="sr-only" checked={type === t} onChange={() => setType(t)} />
-                <span className="text-[var(--text-xs)] font-medium">{t === 'academic' ? '🎓 Académique' : '🌱 Personnel'}</span>
+                <span className="flex items-center gap-1 text-[var(--text-xs)] font-medium">
+                  {t === 'academic' ? <><GraduationCap className="h-3 w-3" /> Académique</> : <><Sprout className="h-3 w-3" /> Personnel</>}
+                </span>
               </label>
             ))}
           </div>
@@ -84,7 +87,9 @@ function SessionLogger({ subjects, onLog, onClose }: { subjects: Subject[]; onLo
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-[var(--color-white)] rounded-2xl p-6 max-w-md w-full space-y-4">
-        <h3 className="text-[var(--text-base)] font-bold text-[var(--color-text)]">📚 Enregistrer une séance d'étude</h3>
+        <h3 className="flex items-center gap-2 text-[var(--text-base)] font-bold text-[var(--color-text)]">
+          <Book className="h-5 w-5" /> Enregistrer une séance d'étude
+        </h3>
         <div>
           <label className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] block mb-1">Matière</label>
           <select value={subjectId} onChange={e => setSubjectId(e.target.value)}
@@ -156,13 +161,15 @@ export default function ProgressTrackerPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">📚 Suivi de Progression</h1>
+          <h1 className="flex items-center gap-2 text-[var(--text-2xl)] font-bold text-[var(--color-text)]">
+            <TrendingUp className="h-6 w-6 text-[var(--color-primary)]" /> Suivi de Progression
+          </h1>
           <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Matières académiques et personnelles — temps d'étude et progression.</p>
         </div>
         <div className="flex gap-3">
           <button onClick={() => setShowLogSession(true)}
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-white)] px-4 py-2.5 text-[var(--text-sm)] font-medium text-[var(--color-text)] hover:bg-[var(--color-gray-bg)] transition-colors">
-            ⏱ Séance d'étude
+            <span className="flex items-center gap-2"><Clock className="h-4 w-4" /> Séance d'étude</span>
           </button>
           <button onClick={() => setShowAddSubject(true)}
             className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[var(--text-sm)] font-semibold text-white hover:opacity-90 transition-opacity">
@@ -210,7 +217,7 @@ export default function ProgressTrackerPage() {
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#6b7280' }} />
               <YAxis unit="h" tick={{ fontSize: 11, fill: '#6b7280' }} />
               <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
-                formatter={(v: number, _: string, props) => [`${v}h`, props.payload?.fullName ?? 'Heures']} />
+                formatter={(v: any, _: any, props: any) => [`${v}h`, props.payload?.fullName ?? 'Heures']} />
               <Bar dataKey="heures" radius={[6, 6, 0, 0]}>
                 {studyBySubject.map((entry, idx) => (
                   <rect key={idx} fill={entry.color} />

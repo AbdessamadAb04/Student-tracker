@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Circle, Clock, CheckCircle2, CheckCheck, AlertTriangle, XCircle, Loader2 } from 'lucide-react'
 import type { StudentTask, TaskStatus } from '../../types/task'
 import { getTaskStatus, getDaysUntilDue, getSubtaskCompletionPercentage } from '../../utils/taskUtils'
 
@@ -10,55 +11,55 @@ interface TaskCardProps {
   onAssessment?: (taskId: string, quality: number, learning: number) => void
 }
 
-const statusConfig: Record<TaskStatus, { label: string; bg: string; text: string; dot: string; icon: string }> = {
+const statusConfig: Record<TaskStatus, { label: string; bg: string; text: string; dot: string; icon: ReactNode }> = {
   pending: {
     label: 'À faire',
     bg: 'bg-gray-100',
     text: 'text-gray-600',
     dot: 'bg-gray-400',
-    icon: '○',
+    icon: <Circle className="h-5 w-5" />,
   },
   in_progress: {
     label: 'En cours',
     bg: 'bg-blue-100',
     text: 'text-blue-700',
     dot: 'bg-blue-500',
-    icon: '◐',
+    icon: <Loader2 className="h-5 w-5 animate-spin" />,
   },
   submitted: {
     label: 'Soumis',
     bg: 'bg-purple-100',
     text: 'text-purple-700',
     dot: 'bg-purple-500',
-    icon: '✓',
+    icon: <CheckCircle2 className="h-5 w-5" />,
   },
   graded: {
     label: 'Noté',
     bg: 'bg-green-100',
     text: 'text-green-700',
     dot: 'bg-green-500',
-    icon: '✓✓',
+    icon: <CheckCheck className="h-5 w-5" />,
   },
   completed: {
     label: 'Complété',
     bg: 'bg-green-100',
     text: 'text-green-700',
     dot: 'bg-green-500',
-    icon: '✓',
+    icon: <CheckCircle2 className="h-5 w-5" />,
   },
   overdue: {
     label: 'En retard',
     bg: 'bg-red-100',
     text: 'text-red-600',
     dot: 'bg-red-500',
-    icon: '⚠',
+    icon: <AlertTriangle className="h-5 w-5" />,
   },
   abandoned: {
     label: 'Abandonné',
     bg: 'bg-gray-100',
     text: 'text-gray-500',
     dot: 'bg-gray-400',
-    icon: '✕',
+    icon: <XCircle className="h-5 w-5" />,
   },
 }
 
@@ -102,7 +103,7 @@ export default function TaskCard({
       <div className="flex items-start gap-4">
         {/* Status Indicator */}
         <div className={`mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${cfg.bg}`}>
-          <span className={`font-bold ${cfg.text}`}>{cfg.icon}</span>
+          <span className={`flex items-center justify-center ${cfg.text}`}>{cfg.icon}</span>
         </div>
 
         {/* Task Content */}
@@ -124,13 +125,15 @@ export default function TaskCard({
           {/* Metadata */}
           <div className="flex flex-wrap items-center gap-3 text-xs mb-2">
             <span className="text-[var(--color-text-secondary)]">{task.category}</span>
-            <span className="text-[var(--color-text-secondary)]">⏱ {task.estimatedHours}h</span>
+            <span className="flex items-center text-[var(--color-text-secondary)]">
+              <Clock className="h-3 w-3 mr-1" /> {task.estimatedHours}h
+            </span>
             {task.actualHours && (
               <span className="text-blue-600">
                 Réel: {task.actualHours}h ({Math.round((task.actualHours / task.estimatedHours) * 100)}%)
               </span>
             )}
-            <span className={isOverdue && currentStatus !== 'graded' ? 'text-red-500 font-medium' : 'text-[var(--color-text-secondary)]'}>
+            <span className={isOverdue ? 'text-red-500 font-medium' : 'text-[var(--color-text-secondary)]'}>
               Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
             </span>
             {!isOverdue && daysLeft > 0 && (

@@ -34,12 +34,28 @@ export interface UserProfile {
 
 export interface ProgressState {
   completedLessons: string[]   // lesson ids
+  completedChapters?: string[] // chapter ids
   lastSeenLesson: string | null
 }
 
 // ─── Academic Types ──────────────────────────────────────────────────────────
 
 export type SubjectType = 'academic' | 'personal'
+
+export interface ChapterResource {
+  id: string
+  name: string
+  type: 'course' | 'exercise' | 'other'
+  fileUrl: string
+  uploadedAt: string
+}
+
+export interface SubjectChapter {
+  id: string
+  title: string
+  content: string
+  resources: ChapterResource[]
+}
 
 export interface Subject {
   id: string
@@ -49,6 +65,7 @@ export interface Subject {
   coefficient?: number    // only for academic subjects
   teacher?: string        // only for academic subjects
   isActive?: boolean
+  chapters?: SubjectChapter[]
 }
 
 export interface Grade {

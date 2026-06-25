@@ -1,7 +1,6 @@
 /**
  * Supabase Database Type Definitions
  * Mirrors the actual PostgreSQL schema.
- * Update this file whenever the schema changes.
  */
 
 export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
@@ -32,6 +31,7 @@ export interface Database {
           year?: string | null
           track?: string | null
         }
+        Relationships: any[]
       }
       subjects: {
         Row: {
@@ -64,6 +64,102 @@ export interface Database {
           teacher?: string | null
           is_active?: boolean
         }
+        Relationships: any[]
+      }
+      grades: {
+        Row: {
+          id: string
+          user_id: string
+          subject_id: string
+          title: string
+          value: number
+          weight: number
+          date: string
+          teacher: string
+          type: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          subject_id: string
+          title: string
+          value: number
+          weight: number
+          date: string
+          teacher: string
+          type: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          value?: number
+          weight?: number
+          date?: string
+          teacher?: string
+          type?: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
+        }
+        Relationships: any[]
+      }
+      absences: {
+        Row: {
+          id: string
+          user_id: string
+          subject_id: string | null
+          date: string
+          duration: 'half' | 'full'
+          reason: string | null
+          excused: boolean
+          certificate_provided: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          subject_id?: string | null
+          date: string
+          duration: 'half' | 'full'
+          reason?: string | null
+          excused?: boolean
+          certificate_provided?: boolean
+          created_at?: string
+        }
+        Update: {
+          reason?: string | null
+          excused?: boolean
+          certificate_provided?: boolean
+        }
+        Relationships: any[]
+      }
+      feedbacks: {
+        Row: {
+          id: string
+          user_id: string
+          teacher_name: string
+          subject_id: string
+          comment: string
+          rating: number
+          is_positive: boolean
+          date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          teacher_name: string
+          subject_id: string
+          comment: string
+          rating: number
+          is_positive: boolean
+          date: string
+          created_at?: string
+        }
+        Update: {
+          comment?: string
+          rating?: number
+          is_positive?: boolean
+        }
+        Relationships: any[]
       }
       tasks: {
         Row: {
@@ -130,6 +226,7 @@ export interface Database {
           grade?: number | null
           notes?: string | null
         }
+        Relationships: any[]
       }
       subtasks: {
         Row: {
@@ -163,6 +260,7 @@ export interface Database {
           completed_date?: string | null
           notes?: string | null
         }
+        Relationships: any[]
       }
       study_sessions: {
         Row: {
@@ -195,6 +293,7 @@ export interface Database {
           notes?: string | null
           quality?: number | null
         }
+        Relationships: any[]
       }
       reflections: {
         Row: {
@@ -252,73 +351,12 @@ export interface Database {
           perceived_difficulty?: number
           notes?: string | null
         }
-      }
-      grades: {
-        Row: {
-          id: string
-          user_id: string
-          subject_id: string
-          title: string
-          value: number
-          weight: number
-          date: string
-          teacher: string
-          type: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          subject_id: string
-          title: string
-          value: number
-          weight: number
-          date: string
-          teacher: string
-          type: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
-          created_at?: string
-        }
-        Update: {
-          title?: string
-          value?: number
-          weight?: number
-          date?: string
-          teacher?: string
-          type?: 'exam' | 'tp' | 'cc' | 'project' | 'quiz'
-        }
-      }
-      absences: {
-        Row: {
-          id: string
-          user_id: string
-          subject_id: string | null
-          date: string
-          duration: 'half' | 'full'
-          reason: string | null
-          excused: boolean
-          certificate_provided: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          subject_id?: string | null
-          date: string
-          duration: 'half' | 'full'
-          reason?: string | null
-          excused?: boolean
-          certificate_provided?: boolean
-          created_at?: string
-        }
-        Update: {
-          reason?: string | null
-          excused?: boolean
-          certificate_provided?: boolean
-        }
+        Relationships: any[]
       }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
     Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }

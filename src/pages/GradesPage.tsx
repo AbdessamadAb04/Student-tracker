@@ -1,13 +1,10 @@
 import { useState } from 'react'
+import { GraduationCap } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { grades, subjects } from '../data/mockData'
+import { useAcademicData } from '../hooks/useAcademicData'
 
 const typeLabel: Record<string, string> = {
-  exam: 'Examen',
-  tp: 'TP',
-  cc: 'CC',
-  project: 'Projet',
-  quiz: 'Quiz',
+  exam: 'Examen', tp: 'TP', cc: 'CC', project: 'Projet', quiz: 'Quiz',
 }
 
 const typeBadge: Record<string, string> = {
@@ -24,69 +21,78 @@ function gradeColor(v: number) {
   return 'text-red-500'
 }
 
-function subjectAverage(subjectId: string) {
-  const sg = grades.filter(g => g.subjectId === subjectId)
-  if (!sg.length) return 0
-  const totalWeight = sg.reduce((s, g) => s + g.weight, 0)
-  const weighted = sg.reduce((s, g) => s + g.value * g.weight, 0)
-  return +(weighted / totalWeight).toFixed(2)
-}
-
-function generalAverage() {
-  let totalCoeff = 0, weightedSum = 0
-  subjects.forEach(s => {
-    const avg = subjectAverage(s.id)
-    weightedSum += avg * s.coefficient
-    totalCoeff += s.coefficient
-  })
-  return totalCoeff ? +(weightedSum / totalCoeff).toFixed(2) : 0
-}
-
-// Build chart data: monthly evolution of all grades
-function buildChartData() {
-  const sorted = [...grades].sort((a, b) => a.date.localeCompare(b.date))
-  const byMonth: Record<string, number[]> = {}
-  sorted.forEach(g => {
-    const month = g.date.slice(0, 7) // YYYY-MM
-    if (!byMonth[month]) byMonth[month] = []
-    byMonth[month].push(g.value)
-  })
-  return Object.entries(byMonth).map(([month, vals]) => ({
-    month: new Date(month + '-01').toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
-    moyenne: +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1),
-  }))
-}
-
 export default function GradesPage() {
+  const { subjects, grades, loading } = useAcademicData()
   const [filterSubject, setFilterSubject] = useState<string>('all')
 
-  const filtered = filterSubject === 'all'
-    ? grades
-    : grades.filter(g => g.subjectId === filterSubject)
+  const academicSubjects = subjects.filter(s => s.type === 'academic')
 
+  function subjectAverage(subjectId: string) {
+    const sg = grades.filter(g => g.subjectId === subjectId)
+    if (!sg.length) return 0
+    const totalWeight = sg.reduce((s, g) => s + g.weight, 0)
+    const weighted = sg.reduce((s, g) => s + g.value * g.weight, 0)
+    return +(weighted / totalWeight).toFixed(2)
+  }
+
+  function generalAverage() {
+    let totalCoeff = 0, weightedSum = 0
+    academicSubjects.forEach(s => {
+      if (!s.coefficient) return
+      const avg = subjectAverage(s.id)
+      weightedSum += avg * s.coefficient
+      totalCoeff += s.coefficient
+    })
+    return totalCoeff ? +(weightedSum / totalCoeff).toFixed(2) : 0
+  }
+
+  function buildChartData() {
+    const sorted = [...grades].sort((a, b) => a.date.localeCompare(b.date))
+    const byMonth: Record<string, number[]> = {}
+    sorted.forEach(g => {
+      const month = g.date.slice(0, 7)
+      if (!byMonth[month]) byMonth[month] = []
+      byMonth[month].push(g.value)
+    })
+    return Object.entries(byMonth).map(([month, vals]) => ({
+      month: new Date(month + '-01').toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+      moyenne: +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1),
+    }))
+  }
+
+  const filtered = filterSubject === 'all' ? grades : grades.filter(g => g.subjectId === filterSubject)
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date))
   const chartData = buildChartData()
   const genAvg = generalAverage()
 
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-6xl animate-pulse space-y-6">
+        <div className="h-8 w-48 rounded-xl bg-[var(--color-gray-bg)]" />
+        <div className="grid grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-2xl bg-[var(--color-gray-bg)]" />)}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      {/* Header */}
       <div>
-        <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">📊 Notes & Moyennes</h1>
+        <h1 className="flex items-center gap-2 text-[var(--text-2xl)] font-bold text-[var(--color-text)]">
+          <GraduationCap className="h-6 w-6 text-[var(--color-primary)]" /> Notes & Moyennes
+        </h1>
         <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Suivi de vos performances académiques par module.</p>
       </div>
 
       {/* General average + subject cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* General average */}
         <div className="col-span-1 flex flex-col items-center justify-center rounded-2xl bg-[var(--color-primary)] p-6 text-white shadow-sm">
           <div className="text-[var(--text-xs)] font-medium uppercase tracking-wider opacity-80">Moyenne Générale</div>
-          <div className="mt-2 text-5xl font-bold">{genAvg}</div>
+          <div className="mt-2 text-5xl font-bold">{genAvg || '—'}</div>
           <div className="mt-1 text-[var(--text-xs)] opacity-70">/ 20</div>
         </div>
-
-        {/* Subject averages */}
-        {subjects.slice(0, 3).map(s => {
+        {academicSubjects.slice(0, 3).map(s => {
           const avg = subjectAverage(s.id)
           return (
             <div key={s.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 shadow-sm">
@@ -94,8 +100,8 @@ export default function GradesPage() {
                 <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
                 <span className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] truncate">{s.name}</span>
               </div>
-              <div className={`text-3xl font-bold ${gradeColor(avg)}`}>{avg}</div>
-              <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">/ 20 · Coeff. {s.coefficient}</div>
+              <div className={`text-3xl font-bold ${gradeColor(avg)}`}>{avg || '—'}</div>
+              <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">/ 20{s.coefficient ? ` · Coeff. ${s.coefficient}` : ''}</div>
               <div className="mt-3 h-1.5 w-full rounded-full bg-[var(--color-gray-bg)]">
                 <div className="h-1.5 rounded-full" style={{ width: `${(avg / 20) * 100}%`, background: s.color }} />
               </div>
@@ -104,11 +110,11 @@ export default function GradesPage() {
         })}
       </div>
 
-      {/* All subject averages */}
+      {/* All subject averages filter */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
         <h2 className="mb-4 text-[var(--text-base)] font-semibold text-[var(--color-text)]">Moyennes par matière</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {subjects.map(s => {
+          {academicSubjects.map(s => {
             const avg = subjectAverage(s.id)
             return (
               <button
@@ -119,9 +125,9 @@ export default function GradesPage() {
                 }`}
                 style={filterSubject === s.id ? { borderColor: s.color, background: s.color + '10' } : {}}
               >
-                <div className="text-xl font-bold" style={{ color: s.color }}>{avg}</div>
+                <div className="text-xl font-bold" style={{ color: s.color }}>{avg || '—'}</div>
                 <div className="mt-0.5 text-[var(--text-xs)] font-medium text-[var(--color-text)] leading-tight">{s.name}</div>
-                <div className="mt-0.5 text-[var(--text-xs)] text-[var(--color-text-secondary)]">Coeff. {s.coefficient}</div>
+                {s.coefficient && <div className="mt-0.5 text-[var(--text-xs)] text-[var(--color-text-secondary)]">Coeff. {s.coefficient}</div>}
               </button>
             )
           })}
@@ -129,30 +135,32 @@ export default function GradesPage() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
-        <h2 className="mb-6 text-[var(--text-base)] font-semibold text-[var(--color-text)]">Évolution des notes dans le temps</h2>
-        <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6b7280' }} />
-            <YAxis domain={[0, 20]} tick={{ fontSize: 11, fill: '#6b7280' }} />
-            <Tooltip
-              contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
-              formatter={(v: number) => [`${v}/20`, 'Moyenne']}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="moyenne"
-              stroke="var(--color-primary)"
-              strokeWidth={2.5}
-              dot={{ fill: 'var(--color-primary)', r: 4 }}
-              activeDot={{ r: 6 }}
-              name="Moyenne mensuelle"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {chartData.length > 0 && (
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
+          <h2 className="mb-6 text-[var(--text-base)] font-semibold text-[var(--color-text)]">Évolution des notes dans le temps</h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#6b7280' }} />
+              <YAxis domain={[0, 20]} tick={{ fontSize: 11, fill: '#6b7280' }} />
+              <Tooltip
+                contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
+                formatter={(v: any) => [`${v}/20`, 'Moyenne']}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="moyenne"
+                stroke="var(--color-primary)"
+                strokeWidth={2.5}
+                dot={{ fill: 'var(--color-primary)', r: 4 }}
+                activeDot={{ r: 6 }}
+                name="Moyenne mensuelle"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Grades table */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] overflow-hidden">
@@ -166,10 +174,7 @@ export default function GradesPage() {
             )}
           </h2>
           {filterSubject !== 'all' && (
-            <button
-              onClick={() => setFilterSubject('all')}
-              className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline"
-            >
+            <button onClick={() => setFilterSubject('all')} className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline">
               Voir tout
             </button>
           )}
@@ -201,8 +206,8 @@ export default function GradesPage() {
                     </td>
                     <td className="px-6 py-3 text-[var(--color-text)]">{g.title}</td>
                     <td className="px-6 py-3">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[var(--text-xs)] font-medium ${typeBadge[g.type]}`}>
-                        {typeLabel[g.type]}
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[var(--text-xs)] font-medium ${typeBadge[g.type] ?? ''}`}>
+                        {typeLabel[g.type] ?? g.type}
                       </span>
                     </td>
                     <td className={`px-6 py-3 text-right text-base font-bold ${gradeColor(g.value)}`}>
@@ -211,6 +216,13 @@ export default function GradesPage() {
                   </tr>
                 )
               })}
+              {sorted.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-[var(--color-text-secondary)] text-[var(--text-sm)]">
+                    Aucune note pour le moment
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

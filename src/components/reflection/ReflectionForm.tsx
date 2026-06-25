@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { ClipboardList, Clock, CheckCircle2, Target, Lightbulb, Brain } from 'lucide-react'
 import type { ReflectionFormData } from '../../types/reflection'
 import { REFLECTION_METRICS } from '../../types/reflection'
 import type { Subject } from '../../types'
@@ -13,28 +14,29 @@ function ScaleInput({ label, description, value, min = 1, max = 10, onChange }: 
   label: string; description: string; value: number; min?: number; max?: number
   onChange: (v: number) => void
 }) {
-  const pct = ((value - min) / (max - min)) * 100
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
           <span className="text-[var(--text-sm)] font-medium text-[var(--color-text)]">{label}</span>
           <p className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">{description}</p>
         </div>
-        <span className="text-[var(--text-base)] font-bold text-[var(--color-primary)] ml-4 flex-shrink-0">{value}/{max}</span>
       </div>
-      <div className="relative">
-        <div className="h-2 w-full rounded-full bg-[var(--color-gray-bg)]">
-          <div className="h-2 rounded-full bg-[var(--color-primary)] transition-all" style={{ width: `${pct}%` }} />
-        </div>
-        <input
-          type="range" min={min} max={max} value={value}
-          onChange={e => onChange(parseInt(e.target.value))}
-          className="absolute inset-0 w-full opacity-0 cursor-pointer h-2"
-        />
-      </div>
-      <div className="flex justify-between text-[10px] text-[var(--color-text-secondary)]">
-        <span>{min}</span><span>{max}</span>
+      <div className="flex justify-between gap-1">
+        {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(num => (
+          <button
+            key={num}
+            type="button"
+            onClick={() => onChange(num)}
+            className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+              value === num 
+                ? 'bg-[var(--color-primary)] text-white' 
+                : 'bg-[var(--color-gray-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)]'
+            }`}
+          >
+            {num}
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -71,7 +73,7 @@ export default function ReflectionForm({ subjects, onSubmit, onCancel }: Reflect
     setLoading(false)
   }
 
-  const Section = ({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) => (
+  const Section = ({ title, icon, children }: { title: string; icon: ReactNode; children: React.ReactNode }) => (
     <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5 space-y-4">
       <h3 className="text-[var(--text-sm)] font-semibold text-[var(--color-text)] flex items-center gap-2">
         <span>{icon}</span> {title}
@@ -84,7 +86,9 @@ export default function ReflectionForm({ subjects, onSubmit, onCancel }: Reflect
     <form onSubmit={handleSubmit} className="space-y-5 max-h-[85vh] overflow-y-auto pr-1">
       <div className="flex items-center justify-between sticky top-0 bg-[var(--color-white)] pb-2 z-10">
         <div>
-          <h2 className="text-[var(--text-xl)] font-bold text-[var(--color-text)]">📋 Réflexion personnelle</h2>
+          <h2 className="flex items-center gap-2 text-[var(--text-xl)] font-bold text-[var(--color-text)]">
+            <ClipboardList className="h-6 w-6 text-[var(--color-primary)]" /> Réflexion personnelle
+          </h2>
           <p className="text-[var(--text-xs)] text-[var(--color-text-secondary)]">Évaluation de tes comportements contrôlables</p>
         </div>
       </div>
@@ -113,7 +117,7 @@ export default function ReflectionForm({ subjects, onSubmit, onCancel }: Reflect
       </div>
 
       {/* Time Investment */}
-      <Section title="Investissement Temps" icon="⏱️">
+      <Section title="Investissement Temps" icon={<Clock className="h-4 w-4" />}>
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="text-[var(--text-xs)] text-[var(--color-text-secondary)] block mb-1">Heures étudiées</label>
@@ -137,7 +141,7 @@ export default function ReflectionForm({ subjects, onSubmit, onCancel }: Reflect
       </Section>
 
       {/* Productivity */}
-      <Section title="Productivité" icon="✅">
+      <Section title="Productivité" icon={<CheckCircle2 className="h-4 w-4" />}>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-[var(--text-xs)] text-[var(--color-text-secondary)] block mb-1">Tâches complétées</label>
@@ -151,7 +155,7 @@ export default function ReflectionForm({ subjects, onSubmit, onCancel }: Reflect
       </Section>
 
       {/* Focus */}
-      <Section title="Concentration & Focus" icon="🎯">
+      <Section title="Concentration & Focus" icon={<Target className="h-4 w-4" />}>
         <ScaleInput label="Niveau de concentration" description="Capacité à rester focalisé (1–10)"
           value={form.concentrationLevel} onChange={v => set('concentrationLevel', v)} />
         <div>
@@ -163,7 +167,7 @@ export default function ReflectionForm({ subjects, onSubmit, onCancel }: Reflect
       </Section>
 
       {/* Satisfaction */}
-      <Section title="Satisfaction & Motivation" icon="💡">
+      <Section title="Satisfaction & Motivation" icon={<Lightbulb className="h-4 w-4" />}>
         {REFLECTION_METRICS.filter(m => ['progressSatisfaction', 'confidenceLevel', 'motivationLevel'].includes(m.key)).map(m => (
           <ScaleInput key={m.key} label={m.label} description={m.description}
             value={form[m.key as keyof ReflectionFormData] as number}
@@ -172,7 +176,7 @@ export default function ReflectionForm({ subjects, onSubmit, onCancel }: Reflect
       </Section>
 
       {/* Understanding */}
-      <Section title="Compréhension & Maîtrise" icon="🧠">
+      <Section title="Compréhension & Maîtrise" icon={<Brain className="h-4 w-4" />}>
         <ScaleInput label="Maîtrise auto-évaluée" description="Comment tu évalues ta maîtrise du sujet (1–10)"
           value={form.selfAssessedMastery} onChange={v => set('selfAssessedMastery', v)} />
         <ScaleInput label="Difficulté perçue" description="Difficulté ressentie du contenu (1 = facile, 10 = très difficile)"

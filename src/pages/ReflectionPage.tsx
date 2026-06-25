@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Brain, ClipboardList, Clock, X } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts'
 import { useReflections } from '../hooks/useReflections'
 import { useSubjects } from '../hooks/useSubjects'
@@ -52,7 +53,9 @@ export default function ReflectionPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[var(--text-2xl)] font-bold text-[var(--color-text)]">🪞 Réflexion & Auto-évaluation</h1>
+          <h1 className="flex items-center gap-2 text-[var(--text-2xl)] font-bold text-[var(--color-text)]">
+            <Brain className="h-6 w-6 text-[var(--color-primary)]" /> Réflexion & Auto-évaluation
+          </h1>
           <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
             Mesure ton évolution sur les facteurs que tu contrôles.
           </p>
@@ -82,7 +85,7 @@ export default function ReflectionPage() {
         <div className="text-center py-20 text-[var(--color-text-secondary)]">Chargement...</div>
       ) : reflections.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-[var(--color-border)] p-16 text-center">
-          <div className="text-5xl mb-4">📋</div>
+          <div className="mb-4 flex justify-center"><ClipboardList className="h-12 w-12 text-[var(--color-text-secondary)]" /></div>
           <h3 className="text-[var(--text-base)] font-semibold text-[var(--color-text)] mb-2">Aucune réflexion enregistrée</h3>
           <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)] mb-6">
             Créez votre première réflexion pour commencer à suivre votre évolution personnelle.
@@ -217,7 +220,7 @@ export default function ReflectionPage() {
                         )}
                       </div>
                       <div className="flex flex-wrap gap-2 text-[var(--text-xs)] text-[var(--color-text-secondary)]">
-                        <span>⏱ {r.hoursStudied}h étudiées</span>
+                        <span className="flex items-center"><Clock className="h-3 w-3 mr-1" /> {r.hoursStudied}h étudiées</span>
                         <span>· {r.sessionsCount} séance{r.sessionsCount > 1 ? 's' : ''}</span>
                         <span>· {r.tasksCompleted} tâche{r.tasksCompleted > 1 ? 's' : ''}</span>
                       </div>
@@ -230,7 +233,7 @@ export default function ReflectionPage() {
                       </div>
                       <button onClick={() => remove(r.id)}
                         className="text-[var(--text-xs)] text-red-400 hover:text-red-600 transition-colors">
-                        ✕
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   </div>

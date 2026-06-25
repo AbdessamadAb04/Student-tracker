@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ClipboardList } from 'lucide-react'
 import TaskCreationForm from '../components/tasks/TaskCreationForm'
 import TaskCard from '../components/tasks/TaskCard'
 import type { StudentTask, TaskStatus, TaskCategory, TaskPriority } from '../types/task'
@@ -8,12 +9,13 @@ import {
   sortTasks,
   filterTasks,
   calculateTaskStats,
-  countByStatus,
 } from '../utils/taskUtils'
+import { useAuth } from '../context/AuthContext'
 
 export default function TasksPage() {
-  // Mock student ID (in production, get from auth context)
-  const studentId = 'student-1'
+  const { user } = useAuth()
+  // Prefer real user ID, fall back to a consistent demo key
+  const studentId = user?.id ?? 'demo-student'
 
   const [tasks, setTasks] = useState<StudentTask[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -30,7 +32,7 @@ export default function TasksPage() {
   useEffect(() => {
     const stored = getStudentTasks(studentId)
     setTasks(stored)
-  }, [])
+  }, [studentId])
 
   // Filter & sort tasks
   const filteredTasks = filterTasks(tasks, {
@@ -42,7 +44,6 @@ export default function TasksPage() {
 
   const sortedTasks = sortTasks(filteredTasks, sortBy)
   const stats = calculateTaskStats(tasks)
-  const statusCounts = countByStatus(tasks)
 
   const handleTaskCreated = (task: StudentTask) => {
     if (editingTask) {
@@ -61,18 +62,15 @@ export default function TasksPage() {
   const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
     const updated = tasks.map(t => {
       if (t.id === taskId) {
-        const completedDate = newStatus === 'completed' || newStatus === 'graded' ? new Date().toISOString() : t.completedDate
+        const completedDate = newStatus === 'completed' || newStatus === 'graded'
+          ? new Date().toISOString()
+          : t.completedDate
         return { ...t, status: newStatus, completedDate }
       }
       return t
     })
     setTasks(updated)
     saveStudentTasks(studentId, updated)
-  }
-
-  const handleEditTask = (task: StudentTask) => {
-    setEditingTask(task)
-    setShowForm(true)
   }
 
   const handleDeleteTask = (taskId: string) => {
@@ -99,21 +97,22 @@ export default function TasksPage() {
     setSortBy('dueDate')
   }
 
+  const hasActiveFilters = filterStatus !== 'all' || filterCategory !== 'all' || filterPriority !== 'all' || searchTerm
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-[var(--color-text)]">📝 Mes Tâches</h1>
-          <p className="mt-1 text-[var(--color-text-secondary)]">Créez et suivez vos tâches personnelles</p>
+          <h1 className="flex items-center gap-2 text-[var(--text-2xl)] font-bold text-[var(--color-text)]">
+            <ClipboardList className="h-6 w-6 text-[var(--color-primary)]" /> Mes Tâches
+          </h1>
+          <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">Créez et suivez vos tâches personnelles</p>
         </div>
         {!showForm && (
           <button
-            onClick={() => {
-              setEditingTask(null)
-              setShowForm(true)
-            }}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            onClick={() => { setEditingTask(null); setShowForm(true) }}
+            className="rounded-xl bg-[var(--color-primary)] px-5 py-2.5 text-[var(--text-sm)] font-semibold text-white hover:opacity-90 transition-opacity"
           >
             + Nouvelle Tâche
           </button>
@@ -123,14 +122,11 @@ export default function TasksPage() {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-4">
-          <div className="bg-[var(--color-white)] rounded-xl p-6 max-w-2xl w-full my-8">
+          <div className="bg-[var(--color-white)] rounded-2xl p-6 max-w-2xl w-full my-8 shadow-xl">
             <TaskCreationForm
               studentId={studentId}
               onTaskCreated={handleTaskCreated}
-              onCancel={() => {
-                setShowForm(false)
-                setEditingTask(null)
-              }}
+              onCancel={() => { setShowForm(false); setEditingTask(null) }}
               defaultTask={editingTask}
               isEditing={!!editingTask}
             />
@@ -139,41 +135,29 @@ export default function TasksPage() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="rounded-lg bg-[var(--color-white)] border border-[var(--color-border)] p-3">
-          <p className="text-xs text-[var(--color-text-secondary)] font-medium">Total</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">{stats.total}</p>
-        </div>
-        <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
-          <p className="text-xs text-blue-700 font-medium">En cours</p>
-          <p className="text-2xl font-bold text-blue-700">{stats.inProgress}</p>
-        </div>
-        <div className="rounded-lg bg-green-50 border border-green-200 p-3">
-          <p className="text-xs text-green-700 font-medium">Complétées</p>
-          <p className="text-2xl font-bold text-green-700">{stats.completed}</p>
-        </div>
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3">
-          <p className="text-xs text-red-700 font-medium">En retard</p>
-          <p className="text-2xl font-bold text-red-700">{stats.overdue}</p>
-        </div>
-        <div className="rounded-lg bg-purple-50 border border-purple-200 p-3">
-          <p className="text-xs text-purple-700 font-medium">Complétion</p>
-          <p className="text-2xl font-bold text-purple-700">{stats.completionRate}%</p>
-        </div>
-        <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
-          <p className="text-xs text-amber-700 font-medium">Temps</p>
-          <p className="text-2xl font-bold text-amber-700">{stats.engagementRate}%</p>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {[
+          { label: 'Total', value: stats.total, bg: 'bg-[var(--color-white)] border border-[var(--color-border)]', text: 'text-[var(--color-text)]', sub: 'text-[var(--color-text-secondary)]' },
+          { label: 'En cours', value: stats.inProgress, bg: 'bg-blue-50 border border-blue-200', text: 'text-blue-700', sub: 'text-blue-600' },
+          { label: 'Complétées', value: stats.completed, bg: 'bg-green-50 border border-green-200', text: 'text-green-700', sub: 'text-green-600' },
+          { label: 'En retard', value: stats.overdue, bg: 'bg-red-50 border border-red-200', text: 'text-red-700', sub: 'text-red-600' },
+          { label: 'Complétion', value: `${stats.completionRate}%`, bg: 'bg-purple-50 border border-purple-200', text: 'text-purple-700', sub: 'text-purple-600' },
+        ].map(s => (
+          <div key={s.label} className={`rounded-2xl p-4 ${s.bg}`}>
+            <div className={`text-[var(--text-xs)] font-medium ${s.sub}`}>{s.label}</div>
+            <div className={`text-3xl font-bold mt-1 ${s.text}`}>{s.value}</div>
+          </div>
+        ))}
       </div>
 
       {/* Filters & Search */}
-      <div className="space-y-4 bg-[var(--color-white)] border border-[var(--color-border)] rounded-xl p-4">
-        <div className="flex flex-wrap items-center gap-2 justify-between">
-          <h3 className="font-semibold text-[var(--color-text)]">Filtres</h3>
-          {(filterStatus !== 'all' || filterCategory !== 'all' || filterPriority !== 'all' || searchTerm) && (
+      <div className="space-y-4 bg-[var(--color-white)] border border-[var(--color-border)] rounded-2xl p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-[var(--text-sm)] font-semibold text-[var(--color-text)]">Filtres & Recherche</h3>
+          {hasActiveFilters && (
             <button
               onClick={resetFilters}
-              className="text-xs text-blue-600 hover:underline"
+              className="text-[var(--text-xs)] text-[var(--color-primary)] hover:underline font-medium"
             >
               Réinitialiser
             </button>
@@ -186,70 +170,74 @@ export default function TasksPage() {
           placeholder="Rechercher une tâche..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="w-full rounded-lg border border-[var(--color-border)] px-3 py-2 text-[var(--color-text)] bg-[var(--color-white)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-xl border border-[var(--color-border)] px-4 py-2.5 text-[var(--text-sm)] text-[var(--color-text)] bg-[var(--color-background)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
         />
 
         {/* Filter Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div>
-            <label className="text-xs font-medium text-[var(--color-text-secondary)] block mb-1">Statut</label>
-            <select
-              value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value as TaskStatus | 'all')}
-              className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1.5 text-xs text-[var(--color-text)] bg-[var(--color-white)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Tous</option>
-              <option value="pending">À faire</option>
-              <option value="in_progress">En cours</option>
-              <option value="submitted">Soumis</option>
-              <option value="completed">Complété</option>
-              <option value="overdue">En retard</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-[var(--color-text-secondary)] block mb-1">Catégorie</label>
-            <select
-              value={filterCategory}
-              onChange={e => setFilterCategory(e.target.value as TaskCategory | 'all')}
-              className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1.5 text-xs text-[var(--color-text)] bg-[var(--color-white)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Tous</option>
-              <option value="study">Étude</option>
-              <option value="practice">Pratique</option>
-              <option value="project">Projet</option>
-              <option value="reading">Lecture</option>
-              <option value="review">Révision</option>
-              <option value="exam">Examen</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-[var(--color-text-secondary)] block mb-1">Priorité</label>
-            <select
-              value={filterPriority}
-              onChange={e => setFilterPriority(e.target.value as TaskPriority | 'all')}
-              className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1.5 text-xs text-[var(--color-text)] bg-[var(--color-white)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Tous</option>
-              <option value="high">Haute</option>
-              <option value="medium">Moyenne</option>
-              <option value="low">Basse</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-[var(--color-text-secondary)] block mb-1">Trier par</label>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value as 'dueDate' | 'priority' | 'status')}
-              className="w-full rounded-lg border border-[var(--color-border)] px-2 py-1.5 text-xs text-[var(--color-text)] bg-[var(--color-white)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="dueDate">Échéance</option>
-              <option value="priority">Priorité</option>
-              <option value="status">Statut</option>
-            </select>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            {
+              label: 'Statut',
+              value: filterStatus,
+              onChange: (v: string) => setFilterStatus(v as TaskStatus | 'all'),
+              options: [
+                { value: 'all', label: 'Tous les statuts' },
+                { value: 'pending', label: 'À faire' },
+                { value: 'in_progress', label: 'En cours' },
+                { value: 'submitted', label: 'Soumis' },
+                { value: 'completed', label: 'Complété' },
+                { value: 'overdue', label: 'En retard' },
+              ],
+            },
+            {
+              label: 'Catégorie',
+              value: filterCategory,
+              onChange: (v: string) => setFilterCategory(v as TaskCategory | 'all'),
+              options: [
+                { value: 'all', label: 'Toutes' },
+                { value: 'study', label: 'Étude' },
+                { value: 'practice', label: 'Pratique' },
+                { value: 'project', label: 'Projet' },
+                { value: 'reading', label: 'Lecture' },
+                { value: 'review', label: 'Révision' },
+                { value: 'exam', label: 'Examen' },
+              ],
+            },
+            {
+              label: 'Priorité',
+              value: filterPriority,
+              onChange: (v: string) => setFilterPriority(v as TaskPriority | 'all'),
+              options: [
+                { value: 'all', label: 'Toutes' },
+                { value: 'high', label: 'Haute' },
+                { value: 'medium', label: 'Moyenne' },
+                { value: 'low', label: 'Basse' },
+              ],
+            },
+            {
+              label: 'Trier par',
+              value: sortBy,
+              onChange: (v: string) => setSortBy(v as 'dueDate' | 'priority' | 'status'),
+              options: [
+                { value: 'dueDate', label: 'Échéance' },
+                { value: 'priority', label: 'Priorité' },
+                { value: 'status', label: 'Statut' },
+              ],
+            },
+          ].map(f => (
+            <div key={f.label}>
+              <label className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] block mb-1">{f.label}</label>
+              <select
+                value={f.value}
+                onChange={e => f.onChange(e.target.value)}
+                className="w-full rounded-xl border border-[var(--color-border)] px-3 py-2 text-[var(--text-xs)] text-[var(--color-text)] bg-[var(--color-white)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              >
+                {f.options.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -261,18 +249,19 @@ export default function TasksPage() {
               key={task.id}
               task={task}
               onStatusChange={handleStatusChange}
-              onEdit={handleEditTask}
+              onEdit={(t) => { setEditingTask(t); setShowForm(true) }}
               onDelete={handleDeleteTask}
               onAssessment={handleAssessment}
             />
           ))
         ) : (
-          <div className="rounded-xl border border-dashed border-[var(--color-border)] p-12 text-center text-[var(--color-text-secondary)]">
-            <p className="text-lg font-medium mb-1">Aucune tâche trouvée</p>
-            <p className="text-sm">
-              {filterStatus !== 'all' || filterCategory !== 'all' || filterPriority !== 'all' || searchTerm
-                ? 'Essayez de modifier vos filtres'
-                : 'Créez votre première tâche!'}
+          <div className="rounded-2xl border-2 border-dashed border-[var(--color-border)] p-16 text-center">
+            <div className="text-5xl mb-4">📝</div>
+            <p className="text-[var(--text-base)] font-semibold text-[var(--color-text)] mb-2">
+              {hasActiveFilters ? 'Aucune tâche correspondante' : 'Aucune tâche créée'}
+            </p>
+            <p className="text-[var(--text-sm)] text-[var(--color-text-secondary)]">
+              {hasActiveFilters ? 'Essayez de modifier vos filtres' : 'Créez votre première tâche !'}
             </p>
           </div>
         )}
