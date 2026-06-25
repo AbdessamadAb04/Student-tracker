@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext'
 import { useProgress } from '../context/ProgressContext'
-import { modules, grades, tasks, mockGroups, mockGroupStudents } from '../data/mockData'
+import { subjects, grades, tasks, mockGroups, mockGroupStudents } from '../data/mockData'
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -46,20 +46,21 @@ function RoleBadge({ role }: { role: 'student' | 'teacher' }) {
 // ─── Student profile ───────────────────────────────────────────────────────────
 
 function StudentProfile({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user']> }) {
-  const { progress, isCompleted } = useProgress()
+  const { isChapterCompleted } = useProgress()
 
   const displayName = user.user_metadata?.name ?? user.email ?? 'Étudiant'
   const initials = displayName.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'ET'
 
-  // Lesson progress
-  const allLessons = modules.flatMap(m => m.chapters.flatMap(c => c.lessons))
-  const totalLessons = allLessons.length
-  const completedLessons = progress.completedLessons.length
-  const lessonPct = Math.round((completedLessons / totalLessons) * 100)
+  // Chapter progress
+  const subjectsWithCh = subjects.filter(s => s.chapters && s.chapters.length > 0)
+  const allChapterIds = subjectsWithCh.flatMap(s => (s.chapters ?? []).map(ch => ch.id))
+  const totalChaptersProfil = allChapterIds.length
+  const completedChaptersProfil = allChapterIds.filter(id => isChapterCompleted(id)).length
+  const lessonPct = totalChaptersProfil ? Math.round((completedChaptersProfil / totalChaptersProfil) * 100) : 0
 
-  const modulesDone = modules.filter(m => {
-    const ids = m.chapters.flatMap(c => c.lessons.map(l => l.id))
-    return ids.every(id => isCompleted(id))
+  const subjectsDone = subjectsWithCh.filter(s => {
+    const ids = (s.chapters ?? []).map(ch => ch.id)
+    return ids.every(id => isChapterCompleted(id))
   }).length
 
   // Grade average (mock data for demo)
@@ -128,8 +129,8 @@ function StudentProfile({ user }: { user: NonNullable<ReturnType<typeof useAuth>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Progression" value={`${lessonPct}%`} sub={`${completedLessons}/${totalLessons} leçons`} />
-        <StatCard label="Modules" value={modulesDone} sub="terminés" />
+        <StatCard label="Progression" value={`${lessonPct}%`} sub={`${completedChaptersProfil}/${totalChaptersProfil} chapitres`} />
+        <StatCard label="Matières" value={subjectsDone} sub="terminées" />
         <StatCard label="Moyenne" value={`${avgGrade}/20`} sub={`${grades.length} notes`} />
         <StatCard label="Tâches" value={completedTasks} sub={`${pendingTasks} en cours`} />
       </div>

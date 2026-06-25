@@ -24,12 +24,60 @@ export const profile: UserProfile = {
 // ─── Subjects ────────────────────────────────────────────────────────────────
 
 export const subjects: Subject[] = [
-  { id: 's1', name: 'Algorithmes Avancés',    color: '#7F77DD', coefficient: 4, teacher: 'Pr. Khaled', type: 'academic' },
-  { id: 's2', name: 'Développement Web',       color: '#1D9E75', coefficient: 3, teacher: 'Pr. Karimi', type: 'academic' },
-  { id: 's3', name: 'Base de Données',         color: '#BA7517', coefficient: 3, teacher: 'Pr. Ouarrari', type: 'academic' },
-  { id: 's4', name: 'Systèmes Distribués',     color: '#D4537E', coefficient: 4, teacher: 'Pr. Nasri', type: 'academic' },
-  { id: 's5', name: 'Gestion de Projet',       color: '#0E7490', coefficient: 2, teacher: 'Pr. Benali', type: 'academic' },
-  { id: 's6', name: 'Sécurité Informatique',  color: '#9333EA', coefficient: 3, teacher: 'Pr. Tahiri', type: 'academic' },
+  {
+    id: 's1', name: 'Algorithmes Avancés', color: '#7F77DD', coefficient: 4, teacher: 'Pr. Khaled', type: 'academic',
+    chapters: [
+      { id: 's1-ch1', title: 'Introduction aux algorithmes', content: 'Notions fondamentales : définition d\'un algorithme, propriétés (entrée, sortie, finitude, efficacité), représentation (pseudo-code, organigramme), complexité algorithmique et notation Big O.', resources: [] },
+      { id: 's1-ch2', title: 'Structures de données', content: 'Les structures de données essentielles : tableaux, listes chaînées, piles, files, arbres binaires, tables de hachage. Complexités opérationnelles et cas d\'usage.', resources: [] },
+      { id: 's1-ch3', title: 'Algorithmes de tri et recherche', content: 'Étude détaillée des algorithmes de tri (bubble, selection, insertion, merge, quick) et de recherche (linéaire, dichotomique). Analyse comparative des complexités.', resources: [] },
+      { id: 's1-ch4', title: 'Graphes et optimisation', content: 'Représentation des graphes (matrice d\'adjacence, listes), parcours (BFS, DFS), plus court chemin (Dijkstra, Bellman-Ford), algorithmes gloutons et programmation dynamique.', resources: [] },
+    ],
+  },
+  {
+    id: 's2', name: 'Développement Web', color: '#1D9E75', coefficient: 3, teacher: 'Pr. Karimi', type: 'academic',
+    chapters: [
+      { id: 's2-ch1', title: 'HTML & CSS Avancé', content: 'Approfondissement HTML5 : balises sémantiques, accessibilité, formulaires. CSS avancé : Flexbox, Grid, animations, responsive design avec media queries.', resources: [] },
+      { id: 's2-ch2', title: 'JavaScript Fondamentaux', content: 'Les bases du langage : variables (let/const/var), types, fonctions, closures, prototypes, programmation asynchrone (callbacks, Promises, async/await).', resources: [] },
+      { id: 's2-ch3', title: 'Framework React', content: 'Introduction à React : composants, JSX, props, state, hooks (useState, useEffect, useContext), cycles de vie, routage avec React Router.', resources: [] },
+      { id: 's2-ch4', title: 'API REST & Backend', content: 'Conception d\'API RESTful : méthodes HTTP, CRUD, authentification JWT, documentation avec Swagger. Introduction à Node.js et Express.', resources: [] },
+    ],
+  },
+  {
+    id: 's3', name: 'Base de Données', color: '#BA7517', coefficient: 3, teacher: 'Pr. Ouarrari', type: 'academic',
+    chapters: [
+      { id: 's3-ch1', title: 'Modélisation conceptuelle', content: 'Modèle Entité-Association (EA) : entités, attributs, associations, cardinalités. Passage au modèle relationnel. Dépendances fonctionnelles et formes normales (1NF à 3NF).', resources: [] },
+      { id: 's3-ch2', title: 'SQL et requêtes avancées', content: 'Langage SQL : DDL (CREATE, ALTER), DML (SELECT, INSERT, UPDATE, DELETE), jointures (INNER, LEFT, RIGHT, FULL), sous-requêtes, fonctions d\'agrégation, index.', resources: [] },
+      { id: 's3-ch3', title: 'Normalisation et optimisation', content: 'Théorie de la normalisation, décomposition sans perte, dépendances fonctionnelles. Optimisation des requêtes, plans d\'exécution, indexation avancée.', resources: [] },
+      { id: 's3-ch4', title: 'NoSQL et Big Data', content: 'Introduction aux bases NoSQL : document (MongoDB), colonne (Cassandra), clé-valeur (Redis), graphe (Neo4j). Comparaison avec le relationnel, cas d\'usage.', resources: [] },
+    ],
+  },
+  {
+    id: 's4', name: 'Systèmes Distribués', color: '#D4537E', coefficient: 4, teacher: 'Pr. Nasri', type: 'academic',
+    chapters: [
+      { id: 's4-ch1', title: 'Introduction aux systèmes distribués', content: 'Définition, caractéristiques (concurrence, absence d\'horloge globale, indépendance des pannes). Modèles d\'architecture, théorème CAP, scalabilité.', resources: [] },
+      { id: 's4-ch2', title: 'Communication et synchronisation', content: 'Modèles de communication : RPC, RMI, sockets. Synchronisation : horloges logiques (Lamport), exclusion mutuelle, élection (Bully, anneau).', resources: [] },
+      { id: 's4-ch3', title: 'Docker et conteneurisation', content: 'Concepts de conteneurisation, Docker : images, conteneurs, Dockerfile, Docker Compose. Orchestration avec Kubernetes : pods, services, déploiements.', resources: [] },
+      { id: 's4-ch4', title: 'Architectures microservices', content: 'Principes des microservices, communication (synchrone/asynchrone), API Gateway, service discovery, tolérance aux pannes (circuit breaker), monitoring.', resources: [] },
+    ],
+  },
+  {
+    id: 's5', name: 'Gestion de Projet', color: '#0E7490', coefficient: 2, teacher: 'Pr. Benali', type: 'academic',
+    chapters: [
+      { id: 's5-ch1', title: 'Méthodologies agiles', content: 'Manifeste agile, principes et valeurs. Comparaison des méthodes traditionnelles (cycle en V) vs agiles. Scrum, Kanban, Extreme Programming (XP).', resources: [] },
+      { id: 's5-ch2', title: 'SCRUM en pratique', content: 'Rôles (Product Owner, Scrum Master, Dev Team), artefacts (Product Backlog, Sprint Backlog, Incrément), événements (Sprint Planning, Daily, Review, Retrospective).', resources: [] },
+      { id: 's5-ch3', title: 'Planification et estimation', content: 'Techniques d\'estimation : story points, planning poker, velocity. Diagramme de Gantt, chemin critique (PERT/CPM). Outils : Jira, Trello, MS Project.', resources: [] },
+      { id: 's5-ch4', title: 'Gestion des risques', content: 'Identification, analyse (qualitative/quantitative) et mitigation des risques. Matrice des risques, plan de contingence. Suivi et contrôle des risques.', resources: [] },
+    ],
+  },
+  {
+    id: 's6', name: 'Sécurité Informatique', color: '#9333EA', coefficient: 3, teacher: 'Pr. Tahiri', type: 'academic',
+    chapters: [
+      { id: 's6-ch1', title: 'Concepts fondamentaux', content: 'Triade CIA (Confidentialité, Intégrité, Disponibilité), authentification, autorisation, non-répudiation. Types d\'attaques : passive, active, interne, externe.', resources: [] },
+      { id: 's6-ch2', title: 'Cryptographie', content: 'Cryptographie symétrique (AES, DES) et asymétrique (RSA, ECC). Fonctions de hachage (SHA-256), signatures numériques, certificats SSL/TLS, PKI.', resources: [] },
+      { id: 's6-ch3', title: 'Sécurité réseau', content: 'Pare-feu, IDS/IPS, VPN, segmentation réseau. Protocoles sécurisés : HTTPS, SSH, SFTP. Attaques réseau : MITM, DDoS, spoofing.', resources: [] },
+      { id: 's6-ch4', title: 'Tests de pénétration', content: 'Méthodologie des tests d\'intrusion : reconnaissance, scanning, exploitation, post-exploitation. Outils : Nmap, Metasploit, Burp Suite. Rapport et remédiation.', resources: [] },
+    ],
+  },
 ]
 
 // ─── Modules (lesson tracker) ────────────────────────────────────────────────

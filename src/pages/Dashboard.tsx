@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { grades, absences, tasks, feedbacks, subjects, modules, profile, mockGroups, mockGroupStudents } from '../data/mockData'
+import { grades, absences, tasks, feedbacks, subjects, profile, mockGroups, mockGroupStudents } from '../data/mockData'
 import { useProgress } from '../context/ProgressContext'
 import { useAuth } from '../context/AuthContext'
 import RadialProgress from '../components/shared/RadialProgress'
@@ -186,7 +186,7 @@ function TeacherDashboard() {
 // ─── Student Dashboard ────────────────────────────────────────────────────────
 
 function StudentDashboard() {
-  const { progress, isCompleted } = useProgress()
+  const { isChapterCompleted } = useProgress()
   const { user } = useAuth()
   const navigate = useNavigate()
 
@@ -197,10 +197,11 @@ function StudentDashboard() {
   const pendingCount = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length
   const recentFeedbacks = [...feedbacks].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
 
-  const allLessons = modules.flatMap(m => m.chapters.flatMap(c => c.lessons))
-  const totalLessons = allLessons.length
-  const completedCount = progress.completedLessons.length
-  const globalPct = Math.round((completedCount / totalLessons) * 100)
+  const subjectsWithChapters = subjects.filter(s => s.chapters && s.chapters.length > 0)
+  const allChapterIds = subjectsWithChapters.flatMap(s => (s.chapters ?? []).map(ch => ch.id))
+  const totalChaptersDashboard = allChapterIds.length
+  const completedChaptersDashboard = allChapterIds.filter(id => isChapterCompleted(id)).length
+  const globalPct = totalChaptersDashboard ? Math.round((completedChaptersDashboard / totalChaptersDashboard) * 100) : 0
 
   const MENTION =
     genAvg >= 18 ? 'Très Bien' :
@@ -367,26 +368,26 @@ function StudentDashboard() {
           <RadialProgress value={globalPct} size={100} strokeWidth={8} label="cours" />
           <div>
             <h2 className="text-[var(--text-base)] font-semibold text-[var(--color-text)]">Progression des cours</h2>
-            <p className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{completedCount}/{totalLessons} leçons complétées</p>
+            <p className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{completedChaptersDashboard}/{totalChaptersDashboard} chapitres complétés</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {modules.map(m => {
-            const ids = m.chapters.flatMap(c => c.lessons.map(l => l.id))
-            const done = ids.filter(id => isCompleted(id)).length
-            const pct = Math.round((done / ids.length) * 100)
+          {subjectsWithChapters.map(s => {
+            const chs = s.chapters ?? []
+            const done = chs.filter(ch => isChapterCompleted(ch.id)).length
+            const pct = chs.length ? Math.round((done / chs.length) * 100) : 0
             return (
               <button
-                key={m.id}
-                onClick={() => navigate(`/modules?moduleId=${m.id}`)}
+                key={s.id}
+                onClick={() => navigate(`/modules?subjectId=${s.id}`)}
                 className="rounded-xl border border-[var(--color-border)] p-3 text-left hover:border-[var(--color-primary)] transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: m.color }} />
-                  <span className="text-[var(--text-xs)] font-medium text-[var(--color-text)] truncate">{m.title}</span>
+                  <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+                  <span className="text-[var(--text-xs)] font-medium text-[var(--color-text)] truncate">{s.name}</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-[var(--color-gray-bg)]">
-                  <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: m.color }} />
+                  <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: s.color }} />
                 </div>
                 <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{pct}%</div>
               </button>

@@ -1,5 +1,6 @@
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import { grades, subjects, absences, tasks } from '../data/mockData'
+import { useProgress } from '../context/ProgressContext'
 
 function subjectAverage(subjectId: string) {
   const sg = grades.filter(g => g.subjectId === subjectId)
@@ -48,6 +49,7 @@ function countAbsenceDays() {
 }
 
 export default function AnalyticsPage() {
+  const { isChapterCompleted } = useProgress()
   const genAvg = generalAverage()
   const radarData = buildRadarData()
   const trendData = buildTrendData()
@@ -58,6 +60,21 @@ export default function AnalyticsPage() {
 
   const bestSubject = subjects.reduce((best, s) => subjectAverage(s.id) > subjectAverage(best.id) ? s : best, subjects[0])
   const weakestSubject = subjects.reduce((worst, s) => subjectAverage(s.id) < subjectAverage(worst.id) ? s : worst, subjects[0])
+
+  const subjectsWithChapters = subjects.filter(s => s.chapters && s.chapters.length > 0)
+  const totalChapters = subjectsWithChapters.reduce((s, sub) => s + (sub.chapters ?? []).length, 0)
+  const allChapterIds = subjectsWithChapters.flatMap(s => (s.chapters ?? []).map(ch => ch.id))
+  const completedChapters = allChapterIds.filter(id => isChapterCompleted(id)).length
+  const chapterRate = totalChapters ? Math.round((completedChapters / totalChapters) * 100) : 0
+  const bestChapterSubject = subjectsWithChapters.reduce((best, s) => {
+    const ids = (s.chapters ?? []).map(ch => ch.id)
+    const done = ids.filter(id => isChapterCompleted(id)).length
+    const rate = ids.length ? done / ids.length : 0
+    const bestIds = (best.chapters ?? []).map(ch => ch.id)
+    const bestDone = bestIds.filter(id => isChapterCompleted(id)).length
+    const bestRate = bestIds.length ? bestDone / bestIds.length : 0
+    return rate > bestRate ? s : best
+  }, subjectsWithChapters[0] ?? subjects[0])
 
   const MENTION =
     genAvg >= 18 ? { label: 'Très Bien', color: '#1D9E75' } :
@@ -75,7 +92,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Top KPIs */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <div className="rounded-2xl bg-[var(--color-primary)] p-5 text-white">
           <div className="text-[var(--text-xs)] font-medium opacity-80 uppercase tracking-wider">Moyenne Générale</div>
           <div className="mt-2 text-4xl font-bold">{genAvg}/20</div>
@@ -88,6 +105,12 @@ export default function AnalyticsPage() {
           <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Taux de présence</div>
           <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{(100 - absenceRate).toFixed(1)}%</div>
           <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{absenceDays}j d'absence</div>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-5">
+          <div className="text-[var(--text-xs)] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Apprentissage</div>
+          <div className="mt-2 text-4xl font-bold text-[var(--color-text)]">{chapterRate}%</div>
+          <div className="mt-1 text-[var(--text-xs)] text-[var(--color-text-secondary)]">{completedChapters}/{totalChapters} chapitres</div>
         </div>
 
         <div className="rounded-2xl border border-green-100 bg-green-50 p-5">
@@ -149,7 +172,7 @@ export default function AnalyticsPage() {
       {/* Insights */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
         <h2 className="mb-4 text-[var(--text-base)] font-semibold text-[var(--color-text)]">Points clés</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
           <div className="rounded-xl bg-green-50 border border-green-100 p-4">
             <div className="text-[var(--text-xs)] font-semibold text-green-700 uppercase tracking-wider mb-1">✨ Meilleure matière</div>
             <div className="flex items-center gap-2 mt-2">
@@ -168,6 +191,16 @@ export default function AnalyticsPage() {
             <div className="mt-1 text-2xl font-bold" style={{ color: weakestSubject.color }}>{subjectAverage(weakestSubject.id)}/20</div>
           </div>
 
+          <div className="rounded-xl bg-purple-50 border border-purple-100 p-4">
+            <div className="text-[var(--text-xs)] font-semibold text-purple-700 uppercase tracking-wider mb-1">📚 Apprentissage</div>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ background: bestChapterSubject?.color ?? '#7F77DD' }} />
+              <span className="font-semibold text-[var(--color-text)]">{bestChapterSubject?.name ?? '—'}</span>
+            </div>
+            <div className="mt-1 text-2xl font-bold text-purple-700">{chapterRate}%</div>
+            <div className="mt-1 text-[var(--text-xs)] text-purple-600">{completedChapters}/{totalChapters} chapitres complétés</div>
+          </div>
+
           <div className="rounded-xl bg-blue-50 border border-blue-100 p-4">
             <div className="text-[var(--text-xs)] font-semibold text-blue-700 uppercase tracking-wider mb-1">🎯 Mention visée</div>
             <div className="mt-2 text-2xl font-bold" style={{ color: MENTION.color }}>{MENTION.label}</div>
@@ -183,13 +216,23 @@ export default function AnalyticsPage() {
       {/* Subject-by-subject breakdown */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-white)] p-6">
         <h2 className="mb-5 text-[var(--text-base)] font-semibold text-[var(--color-text)]">Détail par matière</h2>
+        <div className="flex items-center gap-4 px-1 pb-2 text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">
+          <div className="w-44">Matière</div>
+          <div className="flex-1" />
+          <div className="w-16 text-right">Moyenne</div>
+          <div className="w-20 text-right">Notes</div>
+          <div className="w-16 text-right">Chapitres</div>
+        </div>
         <div className="space-y-3">
           {subjects.map(s => {
             const avg = subjectAverage(s.id)
             const gradeCount = grades.filter(g => g.subjectId === s.id).length
+            const chs = s.chapters ?? []
+            const chDone = chs.filter(ch => isChapterCompleted(ch.id)).length
+            const chPct = chs.length ? Math.round((chDone / chs.length) * 100) : null
             return (
               <div key={s.id} className="flex items-center gap-4">
-                <div className="flex items-center gap-2 w-52 flex-shrink-0">
+                <div className="flex items-center gap-2 w-44 flex-shrink-0">
                   <span className="h-3 w-3 rounded-full flex-shrink-0" style={{ background: s.color }} />
                   <span className="text-[var(--text-sm)] font-medium text-[var(--color-text)] truncate">{s.name}</span>
                 </div>
@@ -199,12 +242,18 @@ export default function AnalyticsPage() {
                     style={{ width: `${(avg / 20) * 100}%`, background: s.color }}
                   />
                 </div>
-                <div className="w-20 flex-shrink-0 text-right">
+                <div className="w-16 flex-shrink-0 text-right">
                   <span className="font-bold text-[var(--color-text)]">{avg}/20</span>
                 </div>
-                <div className="w-24 flex-shrink-0 text-right text-[var(--text-xs)] text-[var(--color-text-secondary)]">
+                <div className="w-20 flex-shrink-0 text-right text-[var(--text-xs)] text-[var(--color-text-secondary)]">
                   {gradeCount} note{gradeCount > 1 ? 's' : ''}
                 </div>
+                {chPct !== null && (
+                  <div className="w-16 flex-shrink-0 text-right">
+                    <span className="font-semibold text-purple-700">{chPct}%</span>
+                    <div className="text-[10px] text-[var(--color-text-secondary)]">{chDone}/{chs.length} ch.</div>
+                  </div>
+                )}
               </div>
             )
           })}

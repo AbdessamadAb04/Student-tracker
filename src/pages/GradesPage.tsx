@@ -300,7 +300,7 @@ export default function GradesPage() {
           <p className="mt-1 text-[var(--text-sm)] text-[var(--color-text-secondary)]">
             {isTeacher 
               ? 'Sélectionnez un étudiant et saisissez ses performances académiques.' 
-              : 'Suivi de vos performances académiques par module.'}
+              : 'Suivi de vos performances académiques par matière.'}
           </p>
         </div>
 
