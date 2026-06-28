@@ -28,5 +28,9 @@ dist-ssr
 .env.local
 .env.*.local
 .env
+
+# Project documentation, designs and builds
 docs/
 documentation/
+UML/
+out/
