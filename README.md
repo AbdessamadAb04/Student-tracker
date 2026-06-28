@@ -1,73 +1,107 @@
-# React + TypeScript + Vite
+# 🎓 EduTrack – Student Progress & Tracker Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+EduTrack is a modern, comprehensive, and premium web application designed to help students track their academic performance, progress, absences, tasks, and reflections. Built with **React**, **TypeScript**, **Tailwind CSS**, and **Supabase**, it provides an intuitive interface for students to keep their academic life organized and visualizes their growth using interactive analytics.
 
-Currently, two official plugins are available:
+🚀 **Live Demo:** [Visit EduTrack on Vercel](https://edu-track-rho-roan.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **📊 Centralized Dashboard:** Get an at-a-glance overview of your average grade, tasks to do, overall attendance, and current progress.
+- **📚 Module Management:** Organize and manage your academic modules/subjects.
+- **📝 Grade Tracker:** Record and visualize your grades across different assignments and modules, featuring automatic average calculations.
+- **🕒 Absence / Attendance Log:** Track your absences by module, monitor limits, and keep up with your attendance rate.
+- **✅ Tasks & To-Do List:** Manage tasks, homework, and study goals with interactive checkboxes and progress tracking.
+- **📈 Advanced Analytics:** View detailed graphs of your grades over time and progress indicators utilizing **Recharts**.
+- **🎯 Progress Tracker:** Track your syllabus or coursework progress dynamically.
+- **💭 Self-Reflection & Journals:** Keep a learning journal to reflect on your achievements, areas of improvement, and goals.
+- **🔒 Secure Authentication:** Powered by **Supabase Auth** for private and safe access to your academic records.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Frontend Framework:** [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool:** [Vite](https://vite.dev/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Database & Authentication:** [Supabase](https://supabase.com/)
+- **Data Visualization:** [Recharts](https://recharts.org/)
+- **Routing:** [React Router DOM v7](https://reactrouter.com/)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 📁 Project Structure
+
+```text
+src/
+├── components/          # Reusable UI components
+│   ├── auth/           # Login & registration forms
+│   ├── reflection/     # Reflection list and forms
+│   ├── shared/         # Sidebar, navigation, layout elements
+│   └── tasks/          # Task list components
+├── context/             # AuthContext, ProgressContext for state management
+├── data/                # Mock data / seed data
+├── hooks/               # Custom React hooks
+├── lib/                 # Third-party configurations (e.g. Supabase, uid utilities)
+├── pages/               # Main application pages
+│   ├── AbsencesPage.tsx
+│   ├── AnalyticsPage.tsx
+│   ├── Dashboard.tsx
+│   ├── FeedbackPage.tsx
+│   ├── GradesPage.tsx
+│   ├── Modules.tsx
+│   ├── Profil.tsx
+│   ├── ProgressTrackerPage.tsx
+│   ├── ReflectionPage.tsx
+│   └── TasksPage.tsx
+├── services/            # Supabase API services
+├── types/               # TypeScript interfaces and types
+├── utils/               # Common helper functions
+├── App.tsx              # Main App entry with Routing and Auth guards
+└── main.tsx            # Application entry point
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🚀 Getting Started
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+To run a local copy of this project, follow these simple steps:
+
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+- npm or yarn
+- A Supabase account (for database & auth config)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/AbdessamadAb04/Student-tracker.git
+   cd Student-tracker
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables:**
+   Create a `.env` file in the root directory and add your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+   Open your browser and navigate to `http://localhost:5173`.
+
+---
+
+## 📝 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
